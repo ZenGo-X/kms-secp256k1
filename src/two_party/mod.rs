@@ -15,6 +15,3 @@
 */
 
 pub mod lindell_2017;
-pub mod party1;
-pub mod party2;
-pub mod traits;
