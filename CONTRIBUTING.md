@@ -1,8 +1,8 @@
-Contributing to the Cryptography utilities project
+Contributing to the KMS project
 =====================================
 
 Pull requests are always welcome, and the KZen dev team appreciates any help the community can
-give to help make Cryptography utilities project better.
+give to help make KMS project better.
 
 Contributor Agreement (CA)
 ----------------
@@ -42,18 +42,18 @@ Make sure to include the following header (by configuring your IDE) in all files
 
 ```rust
 /*
-    Cryptography utilities
+    KMS
 
     Copyright 2018 by Kzen Networks
 
-    This file is part of Cryptography utilities library
-    (https://github.com/KZen-networks/cryptography-utils)
+    This file is part of KMS library
+    (https://github.com/KZen-networks/kms)
 
-    Cryptography utilities is free software: you can redistribute
+    KMS is free software: you can redistribute
     it and/or modify it under the terms of the GNU General Public
     License as published by the Free Software Foundation, either
     version 3 of the License, or (at your option) any later version.
 
-    @license GPL-3.0+ <https://github.com/KZen-networks/cryptography-utils/blob/master/LICENSE>
+    @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 ```
