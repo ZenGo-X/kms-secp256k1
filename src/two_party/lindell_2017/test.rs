@@ -15,11 +15,23 @@
 */
 
 mod tests {
-
+    use cryptography_utils::{GE,FE};
     use two_party::lindell_2017::*;
+    //use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one,party_two};
+
 
     #[test]
-    fn test_master_key_gen() {
+    fn test_key_gen(){
+        let party_one_first_message = party1::MasterKey1::key_gen_first_message();
+        let party_two_first_message = party2::MasterKey2::key_gen_first_message();
+        let (party_one_second_message, paillier_key_pair,rp_encrypted_pairs, rp_challenge, rp_proof) = party1::MasterKey1::key_gen_second_message(&party_one_first_message,&party_two_first_message.d_log_proof);
+        let (party_two_second_message, party_two_paillier, challenge, verification_aid) = party2::MasterKey2::key_gen_second_message(&party_one_first_message, &party_one_second_message, &paillier_key_pair,&rp_challenge,&rp_encrypted_pairs, &rp_proof);
+        let party_one_third_message = party1::MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge);
+        party2::MasterKey2::key_gen_third_message(&party_one_third_message, &verification_aid);
+    }
+
+    #[test]
+    fn test_chain_code() {
         //chain code:
         let party_one_first_message = party1::MasterKey1::chain_code_first_message();
         let party_two_first_message = party2::MasterKey2::chain_code_first_message();
@@ -31,16 +43,17 @@ mod tests {
             &party_one_first_message,
             &party_one_second_message,
         );
-        assert_eq!(
-            party1::MasterKey1::compute_chain_code(
-                &party_one_first_message,
-                &party_two_first_message
-            ),
-            party2::MasterKey2::compute_chain_code(
-                &party_one_first_message,
-                &party_two_first_message
-            )
+        let party1_cc = party1::MasterKey1::compute_chain_code(
+            &party_one_first_message,
+            &party_two_first_message
         );
+        let party2_cc = party2::MasterKey2::compute_chain_code(
+            &party_one_first_message,
+            &party_two_first_message
+        );
+        assert_eq!(party1_cc, party2_cc);
+
+
     }
     #[test]
     fn test_coin_flip() {
@@ -54,5 +67,7 @@ mod tests {
             &party2_first_message,
             &party1_first_message,
         );
+        assert_eq!(random1, random2);
+
     }
 }

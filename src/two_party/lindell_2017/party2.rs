@@ -35,23 +35,19 @@ pub struct Party2Public<'a> {
     c_key: RawCiphertext<'a>,
 }
 
-struct Party2Private {
-    x2: FE,
-}
 
 pub struct MasterKey2<'a> {
-    toggle: bool,
     public: Party2Public<'a>,
-    private: Party2Private,
+    private: party_two::Party2Private,
     chain_code: BigInt,
 }
 
-impl<'a> ManagementSystem<Party2Public<'a>, Party2Private> for MasterKey2<'a> {
+impl<'a> ManagementSystem<Party2Public<'a>, party_two::Party2Private> for MasterKey2<'a> {
     fn rotate(&mut self, cf: &BigInt) -> &mut Self {
         let rand_str: FE = ECScalar::from_big_int(cf);
         let rand_str_invert: FE = ECScalar::from_big_int(&cf.invert(&rand_str.get_q()).unwrap());
         //TODO: use proper set functions
-        self.private.x2 = self.private.x2.mul(&rand_str_invert.get_element());
+        self.private = party_two::Party2Private::update_private_key(&self.private, cf);
         self.public.P2 = self
             .public
             .P2
@@ -96,36 +92,54 @@ impl<'a> MasterKey2<'a> {
     pub fn key_gen_second_message(
         party_one_first_message: &party_one::KeyGenFirstMsg,
         party_one_second_message: &party_one::KeyGenSecondMsg,
-    ) -> party_two::KeyGenSecondMsg {
-        party_two::KeyGenSecondMsg::verify_commitments_and_dlog_proof(
+        paillier_key_pair: &party_one::PaillierKeyPair,
+        challenge: &ChallengeBits,
+        encrypted_pairs: &EncryptedPairs,
+        proof: &Proof,
+    ) -> (party_two::KeyGenSecondMsg, party_two::PaillierPublic, Challenge, VerificationAid ){
+        let party_two_second_message = party_two::KeyGenSecondMsg::verify_commitments_and_dlog_proof(
             &party_one_first_message.pk_commitment,
             &party_one_first_message.zk_pok_commitment,
             &party_one_second_message.zk_pok_blind_factor,
             &party_one_second_message.public_share,
             &party_one_second_message.pk_commitment_blind_factor,
             &party_one_second_message.d_log_proof,
-        ).expect("")
-    }
-
-    pub fn key_gen_third_message(
-        party_two_paillier: &party_two::PaillierPublic,
-    ) -> (Challenge, VerificationAid) {
-        party_two::PaillierPublic::generate_correct_key_challenge(&party_two_paillier)
-    }
-    //TODO: move serialization to this code base from signature code base.
-    pub fn key_gen_forth_message(
-        party_two_paillier: &party_two::PaillierPublic,
-        challenge: &ChallengeBits,
-        encrypted_pairs: &EncryptedPairs,
-        proof: &Proof,
-    ) -> bool {
+        ).expect("");
+        let party_two_paillier = party_two::PaillierPublic {
+            ek: paillier_key_pair.ek.clone(),
+            encrypted_secret_share: paillier_key_pair.encrypted_share.clone(),
+        };
         party_two::PaillierPublic::verify_range_proof(
             &party_two_paillier,
             &challenge,
             &encrypted_pairs,
             &proof,
-        )
+        ).expect("");
+        let (challenge, verification_aid) = party_two::PaillierPublic::generate_correct_key_challenge(&party_two_paillier);
+        return (party_two_second_message, party_two_paillier, challenge, verification_aid);
     }
+
+    pub fn key_gen_third_message(proof_result: &CorrectKeyProof, verification_aid: &VerificationAid) {
+        let _result = party_two::PaillierPublic::verify_correct_key(
+            proof_result.unwrap(), verification_aid).expect("");
+    }
+
+
+    pub fn set_master_key(chain_code : &GE, party2_first_message: &party_two::KeyGenFirstMsg, party1_first_message:&party_one::KeyGenFirstMsg, paillier_public: &party_two::PaillierPublic ) -> MasterKey2<'a>{
+        let party2_public = Party2Public{
+            Q: party_two::compute_pubkey(party2_first_message, party1_first_message),
+            P2: party2_first_message.public_share,
+            paillier_pub: paillier_public.ek,
+            c_key: RawCiphertext(paillier_public.encrypted_secret_share),
+        };
+        let party2_private = party_two::Party2Private::set_private_key(&party2_first_message);
+        MasterKey2{
+            public: party2_public,
+            private: party2_private,
+            chain_code: chain_code.bytes_compressed_to_big_int(),
+        }
+    }
+
 
     pub fn key_rotate_first_message(
         party1_first_message: &coin_flip_optimal_rounds::Party1FirstMessage,

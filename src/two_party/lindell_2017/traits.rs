@@ -14,7 +14,9 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 use cryptography_utils::BigInt;
+use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one::Signature;
 pub trait ManagementSystem<PK, SK> {
     fn rotate(&mut self, &BigInt) -> &mut Self;
-    //fn get_child(&self, index: BigInt, height: BigInt) -> (PK, SK);
+   // fn get_child(&self, index: BigInt, height: BigInt) -> (PK,SK);
+
 }
