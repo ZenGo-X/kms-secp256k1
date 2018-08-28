@@ -14,8 +14,7 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
-
-mod test;
-pub mod party2;
 pub mod party1;
+pub mod party2;
+mod test;
 pub mod traits;

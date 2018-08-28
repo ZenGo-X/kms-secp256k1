@@ -14,9 +14,7 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 use cryptography_utils::BigInt;
-pub trait ManagementSystem<PK,SK> {
+pub trait ManagementSystem<PK, SK> {
     fn rotate(self, &BigInt) -> self;
     fn get_child(&self, index: BigInt, height: BigInt) -> (PK, SK);
-
-
 }
