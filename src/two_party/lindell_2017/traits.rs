@@ -15,6 +15,6 @@
 */
 use cryptography_utils::BigInt;
 pub trait ManagementSystem<PK, SK> {
-    fn rotate(self, &BigInt) -> self;
-    fn get_child(&self, index: BigInt, height: BigInt) -> (PK, SK);
+    fn rotate(&mut self, &BigInt) -> &mut Self;
+    //fn get_child(&self, index: BigInt, height: BigInt) -> (PK, SK);
 }

@@ -15,27 +15,24 @@
 */
 use super::traits::ManagementSystem;
 use cryptography_utils::arithmetic::traits::Modulo;
-use cryptography_utils::cryptographic_primitives::commitments::pedersen_commitment::*;
 use cryptography_utils::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
-use cryptography_utils::cryptographic_primitives::proofs::{
-    sigma_valid_pedersen, sigma_valid_pedersen_blind,
-};
 use cryptography_utils::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use cryptography_utils::cryptographic_primitives::twoparty::dh_key_exchange;
 use cryptography_utils::elliptic::curves::secp256_k1::Secp256k1Scalar;
+use cryptography_utils::elliptic::curves::traits::ECPoint;
 use cryptography_utils::elliptic::curves::traits::ECScalar;
 use cryptography_utils::{BigInt, FE, GE};
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one;
-use paillier::proof::Challenge;
 use paillier::*;
+use std::borrow::Cow;
 
 //TODO: add derive to structs.
 
-pub struct Party1Public {
+pub struct Party1Public<'a> {
     pub Q: GE,
     pub P1: GE,
     paillier_pub: EncryptionKey,
-    c_key: RawCiphertext,
+    c_key: RawCiphertext<'a>,
 }
 
 struct Party1Private {
@@ -43,28 +40,29 @@ struct Party1Private {
     paillier_priv: DecryptionKey,
 }
 
-pub struct MasterKey1 {
-    public: Party1Public,
+pub struct MasterKey1<'a> {
+    public: Party1Public<'a>,
     private: Party1Private,
     chain_code: BigInt,
 }
 
-impl ManagementSystem<Party1Public, Party1Private> for MasterKey1 {
+impl<'a> ManagementSystem<Party1Public<'a>, Party1Private> for MasterKey1<'a> {
     // before rotation make sure both parties have the same key
-    fn rotate(self, cf: &BigInt) -> self {
+    fn rotate(&mut self, cf: &BigInt) -> &mut Self {
         let rand_str: FE = ECScalar::from_big_int(cf);
         //TODO: use proper set functions
         self.private.x1 = self.private.x1.mul(&rand_str.get_element());
-        self.public.P1 = self.public.P1.scalar_mul(&rand_str.get_element());
+        self.public.P1 = self.public.P1.clone().scalar_mul(&rand_str.get_element());
+
         let c_key_new = BigInt::mod_pow(&self.public.c_key.0, cf, &rand_str.get_q());
-        self.public.c_key = RawCiphertext(c_key_new);
+        self.public.c_key = RawCiphertext(Cow::Owned(c_key_new));
         return self;
     }
 
-    fn get_child(&self, index: BigInt, height: BigInt) -> (Party1Public, Party1Private) {}
+    // fn get_child(&self, index: BigInt, height: BigInt) -> (Party1Public, Party1Private) {}
 }
 
-impl MasterKey1 {
+impl<'a> MasterKey1<'a> {
     pub fn chain_code_first_message() -> dh_key_exchange::Party1FirstMessage {
         dh_key_exchange::Party1FirstMessage::create_commitments()
     }
@@ -88,22 +86,21 @@ impl MasterKey1 {
         first_message: &party_one::KeyGenFirstMsg,
         proof: &DLogProof,
     ) -> (party_one::KeyGenSecondMsg, party_one::PaillierKeyPair) {
-        party_one::KeyGenSecondMsg::verify_and_decommit(&first_message, proof).expect("");
+        let key_gen_second_message =
+            party_one::KeyGenSecondMsg::verify_and_decommit(&first_message, proof).expect("");
 
         let paillier_key_pair =
             party_one::PaillierKeyPair::generate_keypair_and_encrypted_share(first_message);
+
+        (key_gen_second_message, paillier_key_pair)
     }
 
     pub fn key_gen_third_message(
         paillier_key_pair: &party_one::PaillierKeyPair,
         challenge: &proof::Challenge,
     ) -> CorrectKeyProof {
-        let proof_result = party_one::PaillierKeyPair::generate_proof_correct_key(
-            &paillier_key_pair,
-            &challenge.val,
-        ).expect("")
-        .val;
-        return proof_result;
+        party_one::PaillierKeyPair::generate_proof_correct_key(&paillier_key_pair, &challenge)
+            .expect("")
     }
 
     pub fn key_gen_forth_message(
@@ -112,13 +109,12 @@ impl MasterKey1 {
     ) -> (EncryptedPairs, ChallengeBits, Proof) {
         let (encrypted_pairs, challenge, proof) =
             party_one::PaillierKeyPair::generate_range_proof(&paillier_key_pair, &first_message);
-        return (encrypted_pairs.val, challenge.val, proof.val);
+        return (encrypted_pairs, challenge, proof);
     }
 
-    pub fn set_master_key(local_fe: &FE, other_ge: &GE) -> MasterKey1 {
+    /*pub fn set_master_key(local_fe: &FE, other_ge: &GE) -> MasterKey1<'a> {
         //chain code using dh ke
-
-    }
+    }*/
 
     //TODO: implmenet sid / state machine
     pub fn key_rotate_first_message() -> (
@@ -126,7 +122,7 @@ impl MasterKey1 {
         Secp256k1Scalar,
         Secp256k1Scalar,
     ) {
-        let (party1_first_message, m1, r1) = coin_flip_optimal_rounds::Party1FirstMessage::commit();
+        coin_flip_optimal_rounds::Party1FirstMessage::commit()
     }
 
     pub fn key_rotate_second_message(
@@ -137,12 +133,6 @@ impl MasterKey1 {
         coin_flip_optimal_rounds::Party1SecondMessage,
         Secp256k1Scalar,
     ) {
-        let (party1_second_message, random1) =
-            coin_flip_optimal_rounds::Party1SecondMessage::reveal(
-                &party2_first_message.seed,
-                m1,
-                r1,
-            );
-        return (party1_second_message, random1);
+        coin_flip_optimal_rounds::Party1SecondMessage::reveal(&party2_first_message.seed, m1, r1)
     }
 }
