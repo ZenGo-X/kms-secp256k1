@@ -14,4 +14,4 @@ rust-gmp = "0.5.0"
 rand = "0.5"
 cryptography-utils = { git = "https://github.com/KZen-networks/cryptography-utils", branch = "rewrite_ec_abstract", features =  ["curvesecp256k1"] }
 multi-party-ecdsa = { git = "https://github.com/KZen-networks/multi-party-ecdsa", branch = "ec_abstract" }
-paillier = { git = "https://github.com/mortendahl/rust-paillier", branch = "dev" }
+paillier = { git = "https://github.com/mortendahl/rust-paillier", branch = "kzen" }
