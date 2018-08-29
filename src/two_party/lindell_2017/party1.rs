@@ -23,6 +23,7 @@ use cryptography_utils::elliptic::curves::traits::ECPoint;
 use cryptography_utils::elliptic::curves::traits::ECScalar;
 use cryptography_utils::{BigInt, FE, GE};
 use cryptography_utils::cryptographic_primitives::hashing::hmac_sha512;
+use cryptography_utils::cryptographic_primitives::hashing::traits::KeyedHash;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one,party_two};
 use paillier::*;
 use std::borrow::Cow;
@@ -62,27 +63,38 @@ impl<'a> ManagementSystem<Party1Public<'a>, party_one::Party1Private> for Master
         }
 
     }
-/*
-     fn get_child(&self, location_in_hir: &Vec<BigInt>) -> MasterKey1 {
+
+     fn get_child(&self, location_in_hir: &Vec<BigInt>) -> MasterKey1<'a> {
          let mask = BigInt::from(2).pow(256) - BigInt::one();
          let public_key = self.public.Q.clone();
-         for index in location_in_hir{
-             let Q_bigint = BigInt::from(&public_key.pk_to_key_slice());
-             let f = hmac_sha512::HMacSha512::create_hmac(&self.chain_code,vec![&Q, &location_in_hir[index] ]);
-             let f_l = &f >> 256;
-             let f_r = f & mask;
-             let public_key = public_key.scalar_mul(&ECScalar::from_big_int(&f_l));
-         }
+         let f = BigInt::zero();
+         let f_l = BigInt::zero();
+         let f_r =  BigInt::zero();
+         let chain_code = self.chain_code.clone();
+         let (public_key,f) = location_in_hir
+             .iter()
+             .fold((public_key,BigInt::zero()), |acc, index| {
+                 let master_public_key_vec = acc.0.pk_to_key_slice();
+                 let Q_bigint = BigInt::from(master_public_key_vec.as_slice());
+                 let f = hmac_sha512::HMacSha512::create_hmac(&chain_code,vec![&Q_bigint, index ]);
+                 let f_l = &f >> 256;
+                 let f_r = &f & &mask;
+                 let f_l_fe: FE =ECScalar::from_big_int(&f_l);
+                 let chain_code = f_r.clone();
+                 (acc.0.scalar_mul(&f_l_fe.get_element()),f)
+             });
+         let f_l = &f >> 256;
+         let f_r = &f & &mask;
          let f_l_fe: FE = ECScalar::from_big_int(&f_l);
-         let f_r_invert = f_r.invert(&f_l_fe.get_q());
+         let f_r_invert = f_r.invert(&f_l_fe.get_q()).unwrap();
          let f_r_invert_fe: FE = ECScalar::from_big_int(&f_r_invert);
 
-         let c_key_new = Paillier::mul(&self.public.paillier_pub,self.public.c_key.clone(), RawPlaintext::from(f_r_invert_fe));
+         let c_key_new = Paillier::mul(&self.public.paillier_pub,self.public.c_key.clone(), RawPlaintext::from(&f_r_invert));
          let P1_old = self.public.P1.clone();
          let public = Party1Public{
              Q: public_key,
              P1: P1_old.scalar_mul(&f_r_invert_fe.get_element()),
-             paillier_pub: self.public.paillier_pub,
+             paillier_pub: self.public.paillier_pub.clone(),
              c_key :c_key_new,
          };
          MasterKey1{
@@ -92,7 +104,7 @@ impl<'a> ManagementSystem<Party1Public<'a>, party_one::Party1Private> for Master
          }
 
      }
-     */
+
 }
 
 impl<'a> MasterKey1<'a> {
