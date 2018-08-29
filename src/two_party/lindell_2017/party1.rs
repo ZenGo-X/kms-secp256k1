@@ -22,6 +22,7 @@ use cryptography_utils::elliptic::curves::secp256_k1::Secp256k1Scalar;
 use cryptography_utils::elliptic::curves::traits::ECPoint;
 use cryptography_utils::elliptic::curves::traits::ECScalar;
 use cryptography_utils::{BigInt, FE, GE};
+use cryptography_utils::cryptographic_primitives::hashing::hmac_sha512;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one,party_two};
 use paillier::*;
 use std::borrow::Cow;
@@ -52,7 +53,6 @@ impl<'a> ManagementSystem<Party1Public<'a>, party_one::Party1Private> for Master
             Q: self.public.Q,
             P1: self.public.P1.clone().scalar_mul(&rand_str.get_element()),
             paillier_pub: self.public.paillier_pub,
-           // c_key : RawCiphertext(Cow::Owned(c_key_new)),
             c_key :c_key_new,
         };
         MasterKey1{
@@ -62,8 +62,37 @@ impl<'a> ManagementSystem<Party1Public<'a>, party_one::Party1Private> for Master
         }
 
     }
+/*
+     fn get_child(&self, location_in_hir: &Vec<BigInt>) -> MasterKey1 {
+         let mask = BigInt::from(2).pow(256) - BigInt::one();
+         let public_key = self.public.Q.clone();
+         for index in location_in_hir{
+             let Q_bigint = BigInt::from(&public_key.pk_to_key_slice());
+             let f = hmac_sha512::HMacSha512::create_hmac(&self.chain_code,vec![&Q, &location_in_hir[index] ]);
+             let f_l = &f >> 256;
+             let f_r = f & mask;
+             let public_key = public_key.scalar_mul(&ECScalar::from_big_int(&f_l));
+         }
+         let f_l_fe: FE = ECScalar::from_big_int(&f_l);
+         let f_r_invert = f_r.invert(&f_l_fe.get_q());
+         let f_r_invert_fe: FE = ECScalar::from_big_int(&f_r_invert);
 
-    // fn get_child(&self, index: BigInt, height: BigInt) -> (Party1Public, Party1Private) {}
+         let c_key_new = Paillier::mul(&self.public.paillier_pub,self.public.c_key.clone(), RawPlaintext::from(f_r_invert_fe));
+         let P1_old = self.public.P1.clone();
+         let public = Party1Public{
+             Q: public_key,
+             P1: P1_old.scalar_mul(&f_r_invert_fe.get_element()),
+             paillier_pub: self.public.paillier_pub,
+             c_key :c_key_new,
+         };
+         MasterKey1{
+             public,
+             private: party_one::Party1Private::update_private_key(&self.private, &f_r_invert),
+             chain_code: f_r,
+         }
+
+     }
+     */
 }
 
 impl<'a> MasterKey1<'a> {

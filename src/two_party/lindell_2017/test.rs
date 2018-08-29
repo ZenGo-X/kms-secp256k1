@@ -24,6 +24,7 @@ mod tests {
 
     #[test]
     fn test_flip_masters(){
+        /// for this test to work party2 MasterKey private need to be changed to pub
      // key gen
         let kg_party_one_first_message = party1::MasterKey1::key_gen_first_message();
         let kg_party_two_first_message = party2::MasterKey2::key_gen_first_message();

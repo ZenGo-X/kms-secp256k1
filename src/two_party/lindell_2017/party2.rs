@@ -25,6 +25,7 @@ use cryptography_utils::cryptographic_primitives::twoparty::dh_key_exchange;
 use cryptography_utils::elliptic::curves::secp256_k1::Secp256k1Scalar;
 use cryptography_utils::elliptic::curves::traits::ECPoint;
 use cryptography_utils::elliptic::curves::traits::ECScalar;
+use cryptography_utils::cryptographic_primitives::hashing::hmac_sha512;
 use paillier::*;
 use std::borrow::Cow;
 use std::borrow::Borrow;
@@ -45,24 +46,54 @@ pub struct MasterKey2<'a> {
 impl<'a> ManagementSystem<Party2Public<'a>, party_two::Party2Private> for MasterKey2<'a> {
     fn rotate(self, cf: &BigInt) -> MasterKey2<'a> {
         let rand_str: FE = ECScalar::from_big_int(cf);
-        let rand_str_invert: FE = ECScalar::from_big_int(&cf.invert(&rand_str.get_q()).unwrap());
+        let rand_str_invert = cf.invert(&rand_str.get_q()).unwrap();
+        let rand_str_invert_fe: FE = ECScalar::from_big_int(&rand_str_invert);
         let c_key_new = Paillier::mul(&self.public.paillier_pub,self.public.c_key.clone(), RawPlaintext::from(cf));
         //TODO: use proper set functions
         let public = Party2Public{
             Q: self.public.Q,
-            P2: self.public.P2.clone().scalar_mul(&rand_str_invert.get_element()),
+            P2: self.public.P2.clone().scalar_mul(&rand_str_invert_fe.get_element()),
             paillier_pub: self.public.paillier_pub,
             c_key: c_key_new,
         };
         MasterKey2{
             public,
-            private: party_two::Party2Private::update_private_key(&self.private, cf),
+            private: party_two::Party2Private::update_private_key(&self.private, &rand_str_invert),
             chain_code: self.chain_code,
         }
 
     }
+/*
+    fn get_child(&self, location_in_hir: &Vec<BigInt>) -> MasterKey2{
+        let mask = BigInt::from(2).pow(256) - BigInt::one();
+        let public_key = self.public.Q.clone();
+        for index in location_in_hir{
+            let Q_bigint = BigInt::from(&public_key.pk_to_key_slice());
+            let f = hmac_sha512::HMacSha512::create_hmac(&self.chain_code,vec![&Q, &location_in_hir[index] ]);
+            let f_l = &f >> 256;
+            let f_r = f & mask;
+            let public_key = public_key.scalar_mul(&ECScalar::from_big_int(&f_l));
+        }
+        let f_l_fe: FE = ECScalar::from_big_int(&f_l);
+        let f_r_fe : FE = ECScalar::from_big_int(&f_r);
+        let f_r_invert = f_r.invert(&f_l_fe.get_q());
+        let f_r_invert_fe: FE = ECScalar::from_big_int(&f_r_invert);
 
-    //fn get_child(&self, index: BigInt, height: BigInt) -> (Party2Public, Party2Private) {}
+        let c_key_new = Paillier::mul(&self.public.paillier_pub,self.public.c_key.clone(), RawPlaintext::from(f_r_invert_fe));
+        let P2_old = self.public.P2.clone();
+        let public = Party2Public{
+            Q: public_key,
+            P2: P2_old.scalar_mul(&f_r_fe.get_element()).scalar_mul(&f_l_fe.get_element()),
+            paillier_pub: self.public.paillier_pub,
+            c_key :c_key_new,
+        };
+        MasterKey2{
+            public,
+            private: party_two::Party2Private::update_private_key(&self.private, &f_r_fe.mul(&f_l_fe.get_element()).to_big_int()),
+            chain_code: f_r,
+        }
+    }
+    */
 }
 
 impl<'a> MasterKey2<'a> {
