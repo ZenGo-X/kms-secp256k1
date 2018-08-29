@@ -84,37 +84,41 @@ impl<'a> ManagementSystem for MasterKey2<'a> {
         let first = location_in_hir.remove(0);
         let master_public_key_vec = public_key.pk_to_key_slice();
         let Q_bigint = BigInt::from(master_public_key_vec.as_slice());
-        let f =
-            hmac_sha512::HMacSha512::create_hmac(&chain_code, vec![&Q_bigint, &first]);
+        let f = hmac_sha512::HMacSha512::create_hmac(&chain_code, vec![&Q_bigint, &first, &BigInt::zero()]);
         let f_l = &f >> 256;
         let f_r = &f & &mask;
         let f_l_fe: FE = ECScalar::from_big_int(&f_l);
         let f_r_fe: FE = ECScalar::from_big_int(&f_r);
         let f_r_invert = f_r.invert(&f_l_fe.get_q()).unwrap();
-        let f_r_invert_fe :  FE = ECScalar::from_big_int(&f_r_invert);
+        let f_r_invert_fe: FE = ECScalar::from_big_int(&f_r_invert);
         let fr_mul_fl = f_l_fe.mul(&f_r_fe.get_element());
-        let chain_code = f_r.clone();
+        let chain_code = hmac_sha512::HMacSha512::create_hmac(&chain_code, vec![&Q_bigint, &first, &BigInt::zero()]) >> 256;
         let public_key = self.public.Q.clone();
         let public_key_new = public_key.scalar_mul(&f_l_fe.get_element());
-        let (public_key_new_child, fr_mul_fl_new_child,f_r_invert_fe_new_child,  f_new) =
-            location_in_hir
-                .iter()
-                .fold((public_key_new, fr_mul_fl, f_r_invert_fe, f), |acc, index| {
+        let (public_key_new_child, fr_mul_fl_new_child, f_r_invert_fe_new_child, f_new) =
+            location_in_hir.iter().fold(
+                (public_key_new, fr_mul_fl, f_r_invert_fe, f),
+                |acc, index| {
                     let master_public_key_vec = acc.0.pk_to_key_slice();
                     let Q_bigint = BigInt::from(master_public_key_vec.as_slice());
                     let f =
-                        hmac_sha512::HMacSha512::create_hmac(&chain_code, vec![&Q_bigint, index]);
+                        hmac_sha512::HMacSha512::create_hmac(&chain_code, vec![&Q_bigint, index, &BigInt::zero()]);
                     let f_l = &f >> 256;
                     let f_r = &f & &mask;
                     let f_l_fe: FE = ECScalar::from_big_int(&f_l);
                     let f_r_fe: FE = ECScalar::from_big_int(&f_r);
                     let f_r_invert = f_r.invert(&f_l_fe.get_q()).unwrap();
-                    let f_r_invert_fe :  FE = ECScalar::from_big_int(&f_r_invert);
+                    let f_r_invert_fe: FE = ECScalar::from_big_int(&f_r_invert);
                     let fr_mo_fl = f_l_fe.mul(&f_r_fe.get_element());
-                    let chain_code = f_r.clone();
-                    (acc.0.scalar_mul(&f_l_fe.get_element()), acc.1.mul(&fr_mo_fl.get_element()), acc.2.mul(&f_r_invert_fe.get_element()), f)
-                });
-
+                    let chain_code = hmac_sha512::HMacSha512::create_hmac(&chain_code, vec![&Q_bigint, index, &BigInt::zero()]) >> 256;
+                    (
+                        acc.0.scalar_mul(&f_l_fe.get_element()),
+                        acc.1.mul(&fr_mo_fl.get_element()),
+                        acc.2.mul(&f_r_invert_fe.get_element()),
+                        f,
+                    )
+                },
+            );
 
         let c_key_new = Paillier::mul(
             &self.public.paillier_pub,
@@ -124,8 +128,7 @@ impl<'a> ManagementSystem for MasterKey2<'a> {
         let P2_old = self.public.P2.clone();
         let public = Party2Public {
             Q: public_key_new_child,
-            P2: P2_old
-                .scalar_mul(&fr_mul_fl_new_child.get_element()),
+            P2: P2_old.scalar_mul(&fr_mul_fl_new_child.get_element()),
             paillier_pub: self.public.paillier_pub.clone(),
             c_key: c_key_new,
         };
@@ -135,7 +138,7 @@ impl<'a> ManagementSystem for MasterKey2<'a> {
                 &self.private,
                 &fr_mul_fl_new_child.to_big_int(),
             ),
-            chain_code: f_r,
+            chain_code: chain_code,
         }
     }
 }
