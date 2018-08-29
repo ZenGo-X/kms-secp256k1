@@ -23,7 +23,81 @@ mod tests {
     use two_party::lindell_2017::*;
 
     #[test]
-    fn test_get_child() {
+    fn test_commutativity_rotate_get_child(){
+        // key gen
+        let kg_party_one_first_message = party1::MasterKey1::key_gen_first_message();
+        let kg_party_two_first_message = party2::MasterKey2::key_gen_first_message();
+        let (kg_party_one_second_message, paillier_key_pair,rp_encrypted_pairs, rp_challenge, rp_proof) = party1::MasterKey1::key_gen_second_message(&kg_party_one_first_message,&kg_party_two_first_message.d_log_proof);
+        let (kg_party_two_second_message, party_two_paillier, challenge, verification_aid) = party2::MasterKey2::key_gen_second_message(&kg_party_one_first_message, &kg_party_one_second_message, &paillier_key_pair,&rp_challenge,&rp_encrypted_pairs, &rp_proof);
+        let kg_party_one_third_message = party1::MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge);
+        party2::MasterKey2::key_gen_third_message(&kg_party_one_third_message, &verification_aid);
+
+        // chain code
+        let cc_party_one_first_message = party1::MasterKey1::chain_code_first_message();
+        let cc_party_two_first_message = party2::MasterKey2::chain_code_first_message();
+        let cc_party_one_second_message = party1::MasterKey1::chain_code_second_message(
+            &cc_party_one_first_message,
+            &cc_party_two_first_message.d_log_proof,
+        );
+        let cc_party_two_second_message = party2::MasterKey2::chain_code_second_message(
+            &cc_party_one_first_message,
+            &cc_party_one_second_message,
+        );
+        let party1_cc = party1::MasterKey1::compute_chain_code(
+            &cc_party_one_first_message,
+            &cc_party_two_first_message
+        );
+        let party2_cc = party2::MasterKey2::compute_chain_code(
+            &cc_party_one_first_message,
+            &cc_party_two_first_message
+        );
+        // rotate and then child:
+            //coin flip:
+        let (party1_first_message, m1, r1) = party1::MasterKey1::key_rotate_first_message();
+        let party2_first_message =
+            party2::MasterKey2::key_rotate_first_message(&party1_first_message);
+        let (party1_second_message, random1) =
+            party1::MasterKey1::key_rotate_second_message(&party2_first_message, &m1, &r1);
+        let random2 = party2::MasterKey2::key_rotate_second_message(
+            &party1_second_message,
+            &party2_first_message,
+            &party1_first_message,
+        );
+            // set master keys:
+        let party_one_master_key = party1::MasterKey1::set_master_key(&party1_cc, &kg_party_one_first_message, &kg_party_two_first_message, &paillier_key_pair);
+        let party_two_master_key = party2::MasterKey2::set_master_key(&party2_cc, &kg_party_two_first_message, &kg_party_one_first_message, &party_two_paillier);
+
+
+        let  party_one_master_key_rotated = party_one_master_key.rotate(&random1.to_big_int());
+        let  party_two_master_key_rotated = party_two_master_key.rotate(&random2.to_big_int());
+        let rc_party_one_master_key = party_one_master_key_rotated.get_child(vec![BigInt::from(10)]);
+        let rc_party_two_master_key = party_two_master_key_rotated.get_child(vec![BigInt::from(10)]);
+        // child and then rotate:
+            // set master keys:
+        let party_one_master_key = party1::MasterKey1::set_master_key(&party1_cc, &kg_party_one_first_message, &kg_party_two_first_message, &paillier_key_pair);
+        let party_two_master_key = party2::MasterKey2::set_master_key(&party2_cc, &kg_party_two_first_message, &kg_party_one_first_message, &party_two_paillier);
+
+        let new_party_one_master_key = party_one_master_key.get_child(vec![BigInt::from(10)]);
+        let new_party_two_master_key = party_two_master_key.get_child(vec![BigInt::from(10)]);
+        let  cr_party_one_master_key = new_party_one_master_key.rotate(&random1.to_big_int());
+        let  cr_party_two_master_key = new_party_two_master_key.rotate(&random2.to_big_int());
+
+        //test signing:
+        let message = BigInt::from(1234);
+        let ep_party_one_first_message = party1::MasterKey1::key_gen_first_message();
+        let ep_party_two_first_message = party2::MasterKey2::key_gen_first_message();
+
+        let partial_sig = party_two::PartialSig::compute(&party_two_paillier.ek, &cr_party_two_master_key.public.c_key.0, &cr_party_two_master_key.private,&ep_party_two_first_message, &ep_party_one_first_message.public_share, &message);
+        let signature = party_one::Signature::compute(&paillier_key_pair, &partial_sig, &ep_party_one_first_message, &ep_party_two_first_message.public_share);
+        party_one::verify(&signature, &cr_party_one_master_key.public.Q,&message).expect("verify failed");
+
+        let partial_sig = party_two::PartialSig::compute(&party_two_paillier.ek, &rc_party_two_master_key.public.c_key.0, &rc_party_two_master_key.private,&ep_party_two_first_message, &ep_party_one_first_message.public_share, &message);
+        let signature = party_one::Signature::compute(&paillier_key_pair, &partial_sig, &ep_party_one_first_message, &ep_party_two_first_message.public_share);
+        party_one::verify(&signature, &rc_party_one_master_key.public.Q,&message).expect("verify failed");
+
+    }
+    #[test]
+    fn test_get_child(){
         // compute master keys:
         // key gen
         let kg_party_one_first_message = party1::MasterKey1::key_gen_first_message();
@@ -84,8 +158,8 @@ mod tests {
             &party_two_paillier,
         );
 
-        let new_party_one_master_key = party_one_master_key.get_child(&vec![BigInt::from(10)]);
-        let new_party_two_master_key = party_two_master_key.get_child(&vec![BigInt::from(10)]);
+        let new_party_one_master_key = party_one_master_key.get_child(vec![BigInt::from(10),BigInt::from(5)]);
+        let new_party_two_master_key = party_two_master_key.get_child(vec![BigInt::from(10),BigInt::from(5)]);
         //test signing:
         let message = BigInt::from(1234);
         let ep_party_one_first_message = party1::MasterKey1::key_gen_first_message();
@@ -105,7 +179,7 @@ mod tests {
             &ep_party_one_first_message,
             &ep_party_two_first_message.public_share,
         );
-        party_one::verify(&signature, &new_party_one_master_key.public.Q, &message)
+        party_one::verify(&signature, &new_party_two_master_key.public.Q, &message)
             .expect("verify failed");
     }
     #[test]

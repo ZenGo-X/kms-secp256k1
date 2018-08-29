@@ -46,7 +46,7 @@ pub struct MasterKey1<'a> {
     chain_code: BigInt,
 }
 
-impl<'a> ManagementSystem<Party1Public<'a>, party_one::Party1Private> for MasterKey1<'a> {
+impl<'a> ManagementSystem for MasterKey1<'a> {
     // before rotation make sure both parties have the same key
     fn rotate(self, cf: &BigInt) -> MasterKey1<'a> {
         let rand_str: FE = ECScalar::from_big_int(cf);
@@ -68,17 +68,33 @@ impl<'a> ManagementSystem<Party1Public<'a>, party_one::Party1Private> for Master
         }
     }
 
-    fn get_child(&self, location_in_hir: &Vec<BigInt>) -> MasterKey1<'a> {
+    fn get_child(&self, mut location_in_hir: Vec<BigInt>) -> MasterKey1<'a> {
         let mask = BigInt::from(2).pow(256) - BigInt::one();
         let public_key = self.public.Q.clone();
         let f = BigInt::zero();
         let f_l = BigInt::zero();
         let f_r = BigInt::zero();
         let chain_code = self.chain_code.clone();
-        let (public_key, f) =
+ 
+        // calc first element:
+        let first = location_in_hir.remove(0);
+        let master_public_key_vec = public_key.pk_to_key_slice();
+        let Q_bigint = BigInt::from(master_public_key_vec.as_slice());
+        let f =
+            hmac_sha512::HMacSha512::create_hmac(&chain_code, vec![&Q_bigint, &first]);
+        let f_l = &f >> 256;
+        let f_r = &f & &mask;
+        let f_l_fe: FE = ECScalar::from_big_int(&f_l);
+        let f_r_invert = f_r.invert(&f_l_fe.get_q()).unwrap();
+        let f_r_invert_fe_new: FE = ECScalar::from_big_int(&f_r_invert);
+
+        let chain_code = f_r.clone();
+        let public_key = self.public.Q.clone();
+        let public_key_new = public_key.scalar_mul(&f_l_fe.get_element());
+        let (public_key_new_child ,f_r_invert_fe_new_child, f_new) =
             location_in_hir
                 .iter()
-                .fold((public_key, BigInt::zero()), |acc, index| {
+                .fold((public_key_new, f_r_invert_fe_new, f), |acc, index| {
                     let master_public_key_vec = acc.0.pk_to_key_slice();
                     let Q_bigint = BigInt::from(master_public_key_vec.as_slice());
                     let f =
@@ -86,30 +102,28 @@ impl<'a> ManagementSystem<Party1Public<'a>, party_one::Party1Private> for Master
                     let f_l = &f >> 256;
                     let f_r = &f & &mask;
                     let f_l_fe: FE = ECScalar::from_big_int(&f_l);
+                    let f_r_invert = f_r.invert(&f_l_fe.get_q()).unwrap();
+                    let f_r_invert_fe: FE = ECScalar::from_big_int(&f_r_invert);
                     let chain_code = f_r.clone();
-                    (acc.0.scalar_mul(&f_l_fe.get_element()), f)
+                    (acc.0.scalar_mul(&f_l_fe.get_element()),acc.1.mul(&f_r_invert_fe.get_element()), f)
                 });
-        let f_l = &f >> 256;
-        let f_r = &f & &mask;
-        let f_l_fe: FE = ECScalar::from_big_int(&f_l);
-        let f_r_invert = f_r.invert(&f_l_fe.get_q()).unwrap();
-        let f_r_invert_fe: FE = ECScalar::from_big_int(&f_r_invert);
+
 
         let c_key_new = Paillier::mul(
             &self.public.paillier_pub,
             self.public.c_key.clone(),
-            RawPlaintext::from(&f_r_invert),
+            RawPlaintext::from(&f_r_invert_fe_new_child.to_big_int()),
         );
         let P1_old = self.public.P1.clone();
         let public = Party1Public {
-            Q: public_key,
-            P1: P1_old.scalar_mul(&f_r_invert_fe.get_element()),
+            Q: public_key_new_child,
+            P1: P1_old.scalar_mul(&f_r_invert_fe_new_child.get_element()),
             paillier_pub: self.public.paillier_pub.clone(),
             c_key: c_key_new,
         };
         MasterKey1 {
             public,
-            private: party_one::Party1Private::update_private_key(&self.private, &f_r_invert),
+            private: party_one::Party1Private::update_private_key(&self.private, &f_r_invert_fe_new_child.to_big_int()),
             chain_code: f_r,
         }
     }

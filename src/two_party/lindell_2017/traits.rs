@@ -15,7 +15,7 @@
 */
 use cryptography_utils::BigInt;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one::Signature;
-pub trait ManagementSystem<PK, SK> {
+pub trait ManagementSystem {
     fn rotate(self, &BigInt) -> Self;
-    fn get_child(&self, location_in_hir: &Vec<BigInt>) -> Self;
+    fn get_child(&self, mut location_in_hir: Vec<BigInt>) -> Self;
 }
