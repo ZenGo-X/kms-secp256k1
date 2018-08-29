@@ -18,5 +18,4 @@ use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one::Sign
 pub trait ManagementSystem<PK, SK> {
     fn rotate(self, &BigInt) -> Self;
     fn get_child(&self, location_in_hir: &Vec<BigInt>) -> Self;
-
 }
