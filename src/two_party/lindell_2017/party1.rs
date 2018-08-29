@@ -25,6 +25,7 @@ use cryptography_utils::{BigInt, FE, GE};
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one,party_two};
 use paillier::*;
 use std::borrow::Cow;
+use std::borrow::Borrow;
 
 //TODO: add derive to structs.
 
@@ -37,22 +38,29 @@ pub struct Party1Public<'a> {
 
 
 pub struct MasterKey1<'a> {
-    public: Party1Public<'a>,
+    pub public: Party1Public<'a>,
     private: party_one::Party1Private,
     chain_code: BigInt,
 }
 
 impl<'a> ManagementSystem<Party1Public<'a>, party_one::Party1Private> for MasterKey1<'a> {
     // before rotation make sure both parties have the same key
-    fn rotate(&mut self, cf: &BigInt) -> &mut Self {
+    fn rotate(self, cf: &BigInt) -> MasterKey1<'a> {
         let rand_str: FE = ECScalar::from_big_int(cf);
-        //TODO: use proper set functions
-        self.public.P1 = self.public.P1.clone().scalar_mul(&rand_str.get_element());
-        let c_key_new = BigInt::mod_pow(&self.public.c_key.0, cf, &rand_str.get_q());
-        self.public.c_key = RawCiphertext(Cow::Owned(c_key_new));
+        let c_key_new = Paillier::mul(&self.public.paillier_pub,self.public.c_key.clone(), RawPlaintext::from(cf));
+        let public = Party1Public{
+            Q: self.public.Q,
+            P1: self.public.P1.clone().scalar_mul(&rand_str.get_element()),
+            paillier_pub: self.public.paillier_pub,
+           // c_key : RawCiphertext(Cow::Owned(c_key_new)),
+            c_key :c_key_new,
+        };
+        MasterKey1{
+            public,
+            private: party_one::Party1Private::update_private_key(&self.private, cf),
+            chain_code: self.chain_code,
+        }
 
-        self.private = party_one::Party1Private::update_private_key(&self.private, cf);
-        return self;
     }
 
     // fn get_child(&self, index: BigInt, height: BigInt) -> (Party1Public, Party1Private) {}
@@ -105,9 +113,9 @@ impl<'a> MasterKey1<'a> {
     pub fn set_master_key(chain_code : &GE,  party1_first_message:&party_one::KeyGenFirstMsg, party2_first_message: &party_two::KeyGenFirstMsg, paillier_key_pair: &party_one::PaillierKeyPair ) -> MasterKey1<'a>{
         let party1_public = Party1Public{
             Q: party_one::compute_pubkey(party1_first_message, party2_first_message),
-            P1: party1_first_message.public_share,
-            paillier_pub: paillier_key_pair.ek,
-            c_key: RawCiphertext(paillier_key_pair.encrypted_share),
+            P1: party1_first_message.public_share.clone(),
+            paillier_pub: paillier_key_pair.ek.clone(),
+            c_key: RawCiphertext::from(paillier_key_pair.encrypted_share.clone()),
         };
         let part1_private = party_one::Party1Private::set_private_key(&party1_first_message,&paillier_key_pair);
         MasterKey1{

@@ -27,35 +27,39 @@ use cryptography_utils::elliptic::curves::traits::ECPoint;
 use cryptography_utils::elliptic::curves::traits::ECScalar;
 use paillier::*;
 use std::borrow::Cow;
+use std::borrow::Borrow;
 
 pub struct Party2Public<'a> {
     pub Q: GE,
     pub P2: GE,
-    paillier_pub: EncryptionKey,
-    c_key: RawCiphertext<'a>,
+    pub paillier_pub: EncryptionKey,
+    pub c_key: RawCiphertext<'a>,
 }
 
-
 pub struct MasterKey2<'a> {
-    public: Party2Public<'a>,
-    private: party_two::Party2Private,
+    pub public: Party2Public<'a>,
+    pub private: party_two::Party2Private,
     chain_code: BigInt,
 }
 
 impl<'a> ManagementSystem<Party2Public<'a>, party_two::Party2Private> for MasterKey2<'a> {
-    fn rotate(&mut self, cf: &BigInt) -> &mut Self {
+    fn rotate(self, cf: &BigInt) -> MasterKey2<'a> {
         let rand_str: FE = ECScalar::from_big_int(cf);
         let rand_str_invert: FE = ECScalar::from_big_int(&cf.invert(&rand_str.get_q()).unwrap());
+        let c_key_new = Paillier::mul(&self.public.paillier_pub,self.public.c_key.clone(), RawPlaintext::from(cf));
         //TODO: use proper set functions
-        self.private = party_two::Party2Private::update_private_key(&self.private, cf);
-        self.public.P2 = self
-            .public
-            .P2
-            .clone()
-            .scalar_mul(&rand_str_invert.get_element());
-        let c_key_new = BigInt::mod_pow(&self.public.c_key.0, cf, &rand_str.get_q());
-        self.public.c_key = RawCiphertext(Cow::Owned(c_key_new));
-        return self;
+        let public = Party2Public{
+            Q: self.public.Q,
+            P2: self.public.P2.clone().scalar_mul(&rand_str_invert.get_element()),
+            paillier_pub: self.public.paillier_pub,
+            c_key: c_key_new,
+        };
+        MasterKey2{
+            public,
+            private: party_two::Party2Private::update_private_key(&self.private, cf),
+            chain_code: self.chain_code,
+        }
+
     }
 
     //fn get_child(&self, index: BigInt, height: BigInt) -> (Party2Public, Party2Private) {}
@@ -121,16 +125,16 @@ impl<'a> MasterKey2<'a> {
 
     pub fn key_gen_third_message(proof_result: &CorrectKeyProof, verification_aid: &VerificationAid) {
         let _result = party_two::PaillierPublic::verify_correct_key(
-            proof_result.unwrap(), verification_aid).expect("");
+            proof_result, verification_aid).expect("");
     }
 
 
     pub fn set_master_key(chain_code : &GE, party2_first_message: &party_two::KeyGenFirstMsg, party1_first_message:&party_one::KeyGenFirstMsg, paillier_public: &party_two::PaillierPublic ) -> MasterKey2<'a>{
         let party2_public = Party2Public{
             Q: party_two::compute_pubkey(party2_first_message, party1_first_message),
-            P2: party2_first_message.public_share,
-            paillier_pub: paillier_public.ek,
-            c_key: RawCiphertext(paillier_public.encrypted_secret_share),
+            P2: party2_first_message.public_share.clone(),
+            paillier_pub: paillier_public.ek.clone(),
+            c_key: RawCiphertext::from(paillier_public.encrypted_secret_share.clone()),
         };
         let party2_private = party_two::Party2Private::set_private_key(&party2_first_message);
         MasterKey2{
