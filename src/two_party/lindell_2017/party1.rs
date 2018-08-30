@@ -14,7 +14,6 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 use super::traits::ManagementSystem;
-use cryptography_utils::arithmetic::traits::Modulo;
 use cryptography_utils::cryptographic_primitives::hashing::hmac_sha512;
 use cryptography_utils::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
 use cryptography_utils::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
@@ -28,14 +27,12 @@ use cryptography_utils::cryptographic_primitives::hashing::traits::KeyedHash;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one, party_two};
 
 use paillier::*;
-use std::borrow::Borrow;
-use std::borrow::Cow;
 
 //TODO: add derive to structs.
 
 pub struct Party1Public<'a> {
-    pub Q: GE,
-    pub P1: GE,
+    pub q: GE,
+    pub p1: GE,
     pub paillier_pub: EncryptionKey,
     pub c_key: RawCiphertext<'a>,
 }
@@ -56,8 +53,8 @@ impl<'a> ManagementSystem for MasterKey1<'a> {
             RawPlaintext::from(cf),
         );
         let public = Party1Public {
-            Q: self.public.Q,
-            P1: self.public.P1.clone().scalar_mul(&rand_str.get_element()),
+            q: self.public.q,
+            p1: self.public.p1.clone().scalar_mul(&rand_str.get_element()),
             paillier_pub: self.public.paillier_pub,
             c_key: c_key_new,
         };
@@ -70,40 +67,44 @@ impl<'a> ManagementSystem for MasterKey1<'a> {
 
     fn get_child(&self, mut location_in_hir: Vec<BigInt>) -> MasterKey1<'a> {
         let mask = BigInt::from(2).pow(256) - BigInt::one();
-        let public_key = self.public.Q.clone();
-        let f = BigInt::zero();
-        let f_l = BigInt::zero();
-        let f_r = BigInt::zero();
+        let public_key = self.public.q.clone();
         let chain_code = self.chain_code.clone();
 
         // calc first element:
         let first = location_in_hir.remove(0);
         let master_public_key_vec = public_key.pk_to_key_slice();
-        let Q_bigint = BigInt::from(master_public_key_vec.as_slice());
-        let f = hmac_sha512::HMacSha512::create_hmac(&chain_code, vec![&Q_bigint, &first, &BigInt::zero()]);
+        let q_bigint = BigInt::from(master_public_key_vec.as_slice());
+        let f = hmac_sha512::HMacSha512::create_hmac(
+            &chain_code,
+            vec![&q_bigint, &first, &BigInt::zero()],
+        );
         let f_l = &f >> 256;
         let f_r = &f & &mask;
         let f_l_fe: FE = ECScalar::from_big_int(&f_l);
         let f_r_invert = f_r.invert(&f_l_fe.get_q()).unwrap();
         let f_r_invert_fe_new: FE = ECScalar::from_big_int(&f_r_invert);
 
-        let chain_code = hmac_sha512::HMacSha512::create_hmac(&chain_code, vec![&Q_bigint, &first, &BigInt::zero()]);
-        let public_key = self.public.Q.clone();
+        let chain_code = hmac_sha512::HMacSha512::create_hmac(
+            &chain_code,
+            vec![&q_bigint, &first, &BigInt::zero()],
+        );
+        let public_key = self.public.q.clone();
         let public_key_new = public_key.scalar_mul(&f_l_fe.get_element());
-        let (public_key_new_child, f_r_invert_fe_new_child, f_new) =
+        let (public_key_new_child, f_r_invert_fe_new_child, _f_new) =
             location_in_hir
                 .iter()
                 .fold((public_key_new, f_r_invert_fe_new, f), |acc, index| {
                     let master_public_key_vec = acc.0.pk_to_key_slice();
-                    let Q_bigint = BigInt::from(master_public_key_vec.as_slice());
-                    let f =
-                        hmac_sha512::HMacSha512::create_hmac(&chain_code, vec![&Q_bigint, index, &BigInt::zero()]);
+                    let q_bigint = BigInt::from(master_public_key_vec.as_slice());
+                    let f = hmac_sha512::HMacSha512::create_hmac(
+                        &chain_code,
+                        vec![&q_bigint, index, &BigInt::zero()],
+                    );
                     let f_l = &f >> 256;
                     let f_r = &f & &mask;
                     let f_l_fe: FE = ECScalar::from_big_int(&f_l);
                     let f_r_invert = f_r.invert(&f_l_fe.get_q()).unwrap();
                     let f_r_invert_fe: FE = ECScalar::from_big_int(&f_r_invert);
-                    let chain_code = hmac_sha512::HMacSha512::create_hmac(&chain_code, vec![&Q_bigint, &index, &BigInt::zero()]);
                     (
                         acc.0.scalar_mul(&f_l_fe.get_element()),
                         acc.1.mul(&f_r_invert_fe.get_element()),
@@ -116,10 +117,10 @@ impl<'a> ManagementSystem for MasterKey1<'a> {
             self.public.c_key.clone(),
             RawPlaintext::from(&f_r_invert_fe_new_child.to_big_int()),
         );
-        let P1_old = self.public.P1.clone();
+        let p1_old = self.public.p1.clone();
         let public = Party1Public {
-            Q: public_key_new_child,
-            P1: P1_old.scalar_mul(&f_r_invert_fe_new_child.get_element()),
+            q: public_key_new_child,
+            p1: p1_old.scalar_mul(&f_r_invert_fe_new_child.get_element()),
             paillier_pub: self.public.paillier_pub.clone(),
             c_key: c_key_new,
         };
@@ -195,8 +196,8 @@ impl<'a> MasterKey1<'a> {
         paillier_key_pair: &party_one::PaillierKeyPair,
     ) -> MasterKey1<'a> {
         let party1_public = Party1Public {
-            Q: party_one::compute_pubkey(party1_first_message, party2_first_message),
-            P1: party1_first_message.public_share.clone(),
+            q: party_one::compute_pubkey(party1_first_message, party2_first_message),
+            p1: party1_first_message.public_share.clone(),
             paillier_pub: paillier_key_pair.ek.clone(),
             c_key: RawCiphertext::from(paillier_key_pair.encrypted_share.clone()),
         };
