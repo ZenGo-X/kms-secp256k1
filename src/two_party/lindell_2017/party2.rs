@@ -22,6 +22,7 @@ use paillier::proof::Challenge;
 
 use cryptography_utils::cryptographic_primitives::hashing::hmac_sha512;
 use cryptography_utils::cryptographic_primitives::hashing::traits::KeyedHash;
+use cryptography_utils::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
 use cryptography_utils::cryptographic_primitives::proofs::ProofError;
 use cryptography_utils::cryptographic_primitives::twoparty::dh_key_exchange;
 use cryptography_utils::elliptic::curves::secp256_k1::Secp256k1Scalar;
@@ -175,8 +176,12 @@ impl<'a> MasterKey2<'a> {
         party_two::KeyGenFirstMsg::create()
     }
     pub fn key_gen_second_message(
-        party_one_first_message: &party_one::KeyGenFirstMsg,
-        party_one_second_message: &party_one::KeyGenSecondMsg,
+        party_one_first_message_pk_commitment: &BigInt,
+        party_one_first_message_zk_pok_commitment: &BigInt,
+        party_one_second_message_zk_pok_blind_factor: &BigInt,
+        party_one_second_message_public_share: &GE,
+        party_one_second_message_pk_commitment_blind_factor: &BigInt,
+        party_one_second_message_d_log_proof: &DLogProof,
         paillier_key_pair: &party_one::PaillierKeyPair,
         challenge: &ChallengeBits,
         encrypted_pairs: &EncryptedPairs,
@@ -192,12 +197,12 @@ impl<'a> MasterKey2<'a> {
     > {
         let party_two_second_message =
             party_two::KeyGenSecondMsg::verify_commitments_and_dlog_proof(
-                &party_one_first_message.pk_commitment,
-                &party_one_first_message.zk_pok_commitment,
-                &party_one_second_message.zk_pok_blind_factor,
-                &party_one_second_message.public_share,
-                &party_one_second_message.pk_commitment_blind_factor,
-                &party_one_second_message.d_log_proof,
+                &party_one_first_message_pk_commitment,
+                &party_one_first_message_zk_pok_commitment,
+                &party_one_second_message_zk_pok_blind_factor,
+                &party_one_second_message_public_share,
+                &party_one_second_message_pk_commitment_blind_factor,
+                &party_one_second_message_d_log_proof,
             );
 
         let party_two_paillier = party_two::PaillierPublic {

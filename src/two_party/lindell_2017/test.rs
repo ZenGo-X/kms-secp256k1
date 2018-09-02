@@ -39,8 +39,12 @@ mod tests {
         );
 
         let key_gen_second_message = party2::MasterKey2::key_gen_second_message(
-            &kg_party_one_first_message,
-            &kg_party_one_second_message,
+            &kg_party_one_first_message.pk_commitment,
+            &kg_party_one_first_message.zk_pok_commitment,
+            &kg_party_one_second_message.zk_pok_blind_factor,
+            &kg_party_one_second_message.public_share,
+            &kg_party_one_second_message.pk_commitment_blind_factor,
+            &kg_party_one_second_message.d_log_proof,
             &paillier_key_pair,
             &rp_challenge,
             &rp_encrypted_pairs,
@@ -206,8 +210,12 @@ mod tests {
         );
 
         let key_gen_second_message = party2::MasterKey2::key_gen_second_message(
-            &kg_party_one_first_message,
-            &kg_party_one_second_message,
+            &kg_party_one_first_message.pk_commitment,
+            &kg_party_one_first_message.zk_pok_commitment,
+            &kg_party_one_second_message.zk_pok_blind_factor,
+            &kg_party_one_second_message.public_share,
+            &kg_party_one_second_message.pk_commitment_blind_factor,
+            &kg_party_one_second_message.d_log_proof,
             &paillier_key_pair,
             &rp_challenge,
             &rp_encrypted_pairs,
@@ -300,8 +308,12 @@ mod tests {
         );
 
         let key_gen_second_message = party2::MasterKey2::key_gen_second_message(
-            &kg_party_one_first_message,
-            &kg_party_one_second_message,
+            &kg_party_one_first_message.pk_commitment,
+            &kg_party_one_first_message.zk_pok_commitment,
+            &kg_party_one_second_message.zk_pok_blind_factor,
+            &kg_party_one_second_message.public_share,
+            &kg_party_one_second_message.pk_commitment_blind_factor,
+            &kg_party_one_second_message.d_log_proof,
             &paillier_key_pair,
             &rp_challenge,
             &rp_encrypted_pairs,
@@ -437,14 +449,17 @@ mod tests {
         );
 
         let key_gen_second_message = party2::MasterKey2::key_gen_second_message(
-            &party_one_first_message,
-            &party_one_second_message,
+            &party_one_first_message.pk_commitment,
+            &party_one_first_message.zk_pok_commitment,
+            &party_one_second_message.zk_pok_blind_factor,
+            &party_one_second_message.public_share,
+            &party_one_second_message.pk_commitment_blind_factor,
+            &party_one_second_message.d_log_proof,
             &paillier_key_pair,
             &rp_challenge,
             &rp_encrypted_pairs,
             &rp_proof,
         );
-
         assert!(key_gen_second_message.is_ok());
 
         let (party_two_second_message, _party_two_paillier, challenge, verification_aid) =
