@@ -230,9 +230,8 @@ impl<'a> MasterKey2<'a> {
     pub fn key_gen_third_message(
         proof_result: &CorrectKeyProof,
         verification_aid: &VerificationAid,
-    ) {
-        let _result = party_two::PaillierPublic::verify_correct_key(proof_result, verification_aid)
-            .expect("");
+    ) -> Result<(), CorrectKeyProofError> {
+        party_two::PaillierPublic::verify_correct_key(proof_result, verification_aid)
     }
 
     pub fn set_master_key(

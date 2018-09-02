@@ -58,9 +58,11 @@ mod tests {
             party1::MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge);
         assert!(kg_party_one_third_message.is_ok());
 
-        party2::MasterKey2::key_gen_third_message(
-            &kg_party_one_third_message.unwrap(),
-            &verification_aid,
+        assert!(
+            party2::MasterKey2::key_gen_third_message(
+                &kg_party_one_third_message.unwrap(),
+                &verification_aid,
+            ).is_ok()
         );
 
         // chain code
@@ -223,9 +225,11 @@ mod tests {
             party1::MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge);
         assert!(kg_party_one_third_message.is_ok());
 
-        party2::MasterKey2::key_gen_third_message(
-            &kg_party_one_third_message.unwrap(),
-            &verification_aid,
+        assert!(
+            party2::MasterKey2::key_gen_third_message(
+                &kg_party_one_third_message.unwrap(),
+                &verification_aid,
+            ).is_ok()
         );
 
         // chain code
@@ -315,9 +319,11 @@ mod tests {
             party1::MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge);
         assert!(kg_party_one_third_message.is_ok());
 
-        party2::MasterKey2::key_gen_third_message(
-            &kg_party_one_third_message.unwrap(),
-            &verification_aid,
+        assert!(
+            party2::MasterKey2::key_gen_third_message(
+                &kg_party_one_third_message.unwrap(),
+                &verification_aid,
+            ).is_ok()
         );
 
         // chain code
@@ -450,9 +456,11 @@ mod tests {
             party1::MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge);
         assert!(party_one_third_message.is_ok());
 
-        party2::MasterKey2::key_gen_third_message(
-            &party_one_third_message.unwrap(),
-            &verification_aid,
+        assert!(
+            party2::MasterKey2::key_gen_third_message(
+                &party_one_third_message.unwrap(),
+                &verification_aid,
+            ).is_ok()
         );
     }
 
