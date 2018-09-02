@@ -56,7 +56,12 @@ mod tests {
 
         let kg_party_one_third_message =
             party1::MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge);
-        party2::MasterKey2::key_gen_third_message(&kg_party_one_third_message, &verification_aid);
+        assert!(kg_party_one_third_message.is_ok());
+
+        party2::MasterKey2::key_gen_third_message(
+            &kg_party_one_third_message.unwrap(),
+            &verification_aid,
+        );
 
         // chain code
         let cc_party_one_first_message = party1::MasterKey1::chain_code_first_message();
@@ -216,7 +221,12 @@ mod tests {
 
         let kg_party_one_third_message =
             party1::MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge);
-        party2::MasterKey2::key_gen_third_message(&kg_party_one_third_message, &verification_aid);
+        assert!(kg_party_one_third_message.is_ok());
+
+        party2::MasterKey2::key_gen_third_message(
+            &kg_party_one_third_message.unwrap(),
+            &verification_aid,
+        );
 
         // chain code
         let cc_party_one_first_message = party1::MasterKey1::chain_code_first_message();
@@ -232,20 +242,9 @@ mod tests {
 
         assert!(cc_party_two_second_message.is_ok());
 
-        let party1_cc = party1::MasterKey1::compute_chain_code(
-            &cc_party_one_first_message,
-            &cc_party_two_first_message,
-        );
         let party2_cc = party2::MasterKey2::compute_chain_code(
             &cc_party_one_first_message,
             &cc_party_two_first_message,
-        );
-        // set master keys:
-        let party_one_master_key = party1::MasterKey1::set_master_key(
-            &party1_cc,
-            &kg_party_one_first_message,
-            &kg_party_two_first_message,
-            &paillier_key_pair,
         );
 
         let party_two_master_key = party2::MasterKey2::set_master_key(
@@ -255,8 +254,6 @@ mod tests {
             &party_two_paillier,
         );
 
-        let new_party_one_master_key =
-            party_one_master_key.get_child(vec![BigInt::from(10), BigInt::from(5)]);
         let new_party_two_master_key =
             party_two_master_key.get_child(vec![BigInt::from(10), BigInt::from(5)]);
         //test signing:
@@ -316,7 +313,12 @@ mod tests {
 
         let kg_party_one_third_message =
             party1::MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge);
-        party2::MasterKey2::key_gen_third_message(&kg_party_one_third_message, &verification_aid);
+        assert!(kg_party_one_third_message.is_ok());
+
+        party2::MasterKey2::key_gen_third_message(
+            &kg_party_one_third_message.unwrap(),
+            &verification_aid,
+        );
 
         // chain code
         let cc_party_one_first_message = party1::MasterKey1::chain_code_first_message();
@@ -439,14 +441,19 @@ mod tests {
 
         assert!(key_gen_second_message.is_ok());
 
-        let (party_two_second_message, party_two_paillier, challenge, verification_aid) =
+        let (party_two_second_message, _party_two_paillier, challenge, verification_aid) =
             key_gen_second_message.unwrap();
 
         assert!(party_two_second_message.is_ok());
 
         let party_one_third_message =
             party1::MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge);
-        party2::MasterKey2::key_gen_third_message(&party_one_third_message, &verification_aid);
+        assert!(party_one_third_message.is_ok());
+
+        party2::MasterKey2::key_gen_third_message(
+            &party_one_third_message.unwrap(),
+            &verification_aid,
+        );
     }
 
     #[test]

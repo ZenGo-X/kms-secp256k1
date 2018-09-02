@@ -184,9 +184,8 @@ impl<'a> MasterKey1<'a> {
     pub fn key_gen_third_message(
         paillier_key_pair: &party_one::PaillierKeyPair,
         challenge: &proof::Challenge,
-    ) -> CorrectKeyProof {
+    ) -> Result<CorrectKeyProof, CorrectKeyProofError> {
         party_one::PaillierKeyPair::generate_proof_correct_key(&paillier_key_pair, &challenge)
-            .expect("")
     }
 
     pub fn set_master_key(
