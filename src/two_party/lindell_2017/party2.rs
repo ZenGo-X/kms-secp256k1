@@ -182,7 +182,8 @@ impl<'a> MasterKey2<'a> {
         party_one_second_message_public_share: &GE,
         party_one_second_message_pk_commitment_blind_factor: &BigInt,
         party_one_second_message_d_log_proof: &DLogProof,
-        paillier_key_pair: &party_one::PaillierKeyPair,
+        paillier_encryption_key: &EncryptionKey,
+        paillier_encrypted_share: &BigInt,
         challenge: &ChallengeBits,
         encrypted_pairs: &EncryptedPairs,
         proof: &Proof,
@@ -206,8 +207,8 @@ impl<'a> MasterKey2<'a> {
             );
 
         let party_two_paillier = party_two::PaillierPublic {
-            ek: paillier_key_pair.ek.clone(),
-            encrypted_secret_share: paillier_key_pair.encrypted_share.clone(),
+            ek: paillier_encryption_key.clone(),
+            encrypted_secret_share: paillier_encrypted_share.clone(),
         };
 
         let range_proof = party_two::PaillierPublic::verify_range_proof(
