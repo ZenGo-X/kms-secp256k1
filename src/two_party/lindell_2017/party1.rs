@@ -26,22 +26,8 @@ use cryptography_utils::{BigInt, FE, GE};
 use cryptography_utils::cryptographic_primitives::hashing::traits::KeyedHash;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one;
 
+use super::{MasterKey1, Party1Public};
 use paillier::*;
-
-#[derive(Serialize, Deserialize)]
-pub struct Party1Public {
-    pub q: GE,
-    pub p1: GE,
-    pub paillier_pub: EncryptionKey,
-    pub c_key: BigInt,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct MasterKey1 {
-    pub public: Party1Public,
-    private: party_one::Party1Private,
-    chain_code: BigInt,
-}
 
 impl ManagementSystem for MasterKey1 {
     // before rotation make sure both parties have the same key

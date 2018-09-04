@@ -14,6 +14,40 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
+use cryptography_utils::{BigInt, GE};
+use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one, party_two};
+use paillier::*;
+
+#[derive(Serialize, Deserialize)]
+pub struct Party1Public {
+    pub q: GE,
+    pub p1: GE,
+    pub paillier_pub: EncryptionKey,
+    pub c_key: BigInt,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct MasterKey1 {
+    pub public: Party1Public,
+    private: party_one::Party1Private,
+    chain_code: BigInt,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Party2Public {
+    pub q: GE,
+    pub p2: GE,
+    pub paillier_pub: EncryptionKey,
+    pub c_key: BigInt,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct MasterKey2 {
+    pub public: Party2Public,
+    pub private: party_two::Party2Private,
+    chain_code: BigInt,
+}
+
 pub mod party1;
 pub mod party2;
 mod test;

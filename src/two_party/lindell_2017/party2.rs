@@ -29,22 +29,8 @@ use cryptography_utils::elliptic::curves::secp256_k1::Secp256k1Scalar;
 use cryptography_utils::elliptic::curves::traits::ECPoint;
 use cryptography_utils::elliptic::curves::traits::ECScalar;
 
+use super::{MasterKey2, Party2Public};
 use paillier::*;
-
-#[derive(Serialize, Deserialize)]
-pub struct Party2Public {
-    pub q: GE,
-    pub p2: GE,
-    pub paillier_pub: EncryptionKey,
-    pub c_key: BigInt,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct MasterKey2 {
-    pub public: Party2Public,
-    pub private: party_two::Party2Private,
-    chain_code: BigInt,
-}
 
 impl ManagementSystem for MasterKey2 {
     fn rotate(self, cf: &BigInt) -> MasterKey2 {
