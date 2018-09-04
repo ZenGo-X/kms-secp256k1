@@ -13,6 +13,9 @@
 
     @license GPL-3.0+ <https://github.com/KZen-networks/cryptography-utils/blob/master/LICENSE>
 */
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
 
 extern crate cryptography_utils;
 extern crate multi_party_ecdsa;

@@ -28,35 +28,38 @@ use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one;
 
 use paillier::*;
 
-//TODO: add derive to structs.
-
-pub struct Party1Public<'a> {
+#[derive(Serialize, Deserialize)]
+pub struct Party1Public {
     pub q: GE,
     pub p1: GE,
     pub paillier_pub: EncryptionKey,
-    pub c_key: RawCiphertext<'a>,
+    pub c_key: BigInt,
 }
 
-pub struct MasterKey1<'a> {
-    pub public: Party1Public<'a>,
+#[derive(Serialize, Deserialize)]
+pub struct MasterKey1 {
+    pub public: Party1Public,
     private: party_one::Party1Private,
     chain_code: BigInt,
 }
 
-impl<'a> ManagementSystem for MasterKey1<'a> {
+impl ManagementSystem for MasterKey1 {
     // before rotation make sure both parties have the same key
-    fn rotate(self, cf: &BigInt) -> MasterKey1<'a> {
+    fn rotate(self, cf: &BigInt) -> MasterKey1 {
         let rand_str: FE = ECScalar::from_big_int(cf);
         let c_key_new = Paillier::mul(
             &self.public.paillier_pub,
-            self.public.c_key.clone(),
+            RawCiphertext::from(self.public.c_key.clone()),
             RawPlaintext::from(cf),
         );
+
+        let c_key: &BigInt = c_key_new.0.as_ref();
+
         let public = Party1Public {
             q: self.public.q,
             p1: self.public.p1.clone().scalar_mul(&rand_str.get_element()),
             paillier_pub: self.public.paillier_pub,
-            c_key: c_key_new,
+            c_key: c_key.to_owned(),
         };
         MasterKey1 {
             public,
@@ -65,7 +68,7 @@ impl<'a> ManagementSystem for MasterKey1<'a> {
         }
     }
 
-    fn get_child(&self, mut location_in_hir: Vec<BigInt>) -> MasterKey1<'a> {
+    fn get_child(&self, mut location_in_hir: Vec<BigInt>) -> MasterKey1 {
         let mask = BigInt::from(2).pow(256) - BigInt::one();
         let public_key = self.public.q.clone();
         let chain_code = self.chain_code.clone();
@@ -114,15 +117,18 @@ impl<'a> ManagementSystem for MasterKey1<'a> {
 
         let c_key_new = Paillier::mul(
             &self.public.paillier_pub,
-            self.public.c_key.clone(),
+            RawCiphertext::from(self.public.c_key.clone()),
             RawPlaintext::from(&f_r_invert_fe_new_child.to_big_int()),
         );
         let p1_old = self.public.p1.clone();
+
+        let c_key: &BigInt = c_key_new.0.as_ref();
+
         let public = Party1Public {
             q: public_key_new_child,
             p1: p1_old.scalar_mul(&f_r_invert_fe_new_child.get_element()),
             paillier_pub: self.public.paillier_pub.clone(),
-            c_key: c_key_new,
+            c_key: c_key.to_owned(),
         };
         MasterKey1 {
             public,
@@ -135,7 +141,7 @@ impl<'a> ManagementSystem for MasterKey1<'a> {
     }
 }
 
-impl<'a> MasterKey1<'a> {
+impl MasterKey1 {
     pub fn chain_code_first_message() -> dh_key_exchange::Party1FirstMessage {
         dh_key_exchange::Party1FirstMessage::create_commitments()
     }
@@ -193,12 +199,12 @@ impl<'a> MasterKey1<'a> {
         party1_first_message: &party_one::KeyGenFirstMsg,
         party2_first_message_public_share: &GE,
         paillier_key_pair: &party_one::PaillierKeyPair,
-    ) -> MasterKey1<'a> {
+    ) -> MasterKey1 {
         let party1_public = Party1Public {
             q: party_one::compute_pubkey(party1_first_message, party2_first_message_public_share),
             p1: party1_first_message.public_share.clone(),
             paillier_pub: paillier_key_pair.ek.clone(),
-            c_key: RawCiphertext::from(paillier_key_pair.encrypted_share.clone()),
+            c_key: paillier_key_pair.encrypted_share.clone(),
         };
         let part1_private =
             party_one::Party1Private::set_private_key(&party1_first_message, &paillier_key_pair);

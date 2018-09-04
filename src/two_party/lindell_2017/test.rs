@@ -161,7 +161,7 @@ mod tests {
 
         let partial_sig = party_two::PartialSig::compute(
             &party_two_paillier.ek,
-            &cr_party_two_master_key.public.c_key.0,
+            &cr_party_two_master_key.public.c_key,
             &cr_party_two_master_key.private,
             &ep_party_two_first_message,
             &ep_party_one_first_message.public_share,
@@ -180,7 +180,7 @@ mod tests {
 
         let partial_sig = party_two::PartialSig::compute(
             &party_two_paillier.ek,
-            &rc_party_two_master_key.public.c_key.0,
+            &rc_party_two_master_key.public.c_key,
             &rc_party_two_master_key.private,
             &ep_party_two_first_message,
             &ep_party_one_first_message.public_share,
@@ -285,7 +285,7 @@ mod tests {
 
         let partial_sig = party_two::PartialSig::compute(
             &party_two_paillier.ek,
-            &new_party_two_master_key.public.c_key.0,
+            &new_party_two_master_key.public.c_key,
             &new_party_two_master_key.private,
             &ep_party_two_first_message,
             &ep_party_one_first_message.public_share,
@@ -406,7 +406,7 @@ mod tests {
         let message = BigInt::from(1234);
         let partial_sig = party_two::PartialSig::compute(
             &party_two_paillier.ek,
-            &party_two_master_key.public.c_key.0.clone(),
+            &party_two_master_key.public.c_key.clone(),
             &party_two_master_key.private,
             &ep_party_two_first_message,
             &ep_party_one_first_message.public_share,
@@ -432,7 +432,7 @@ mod tests {
 
         let partial_sig = party_two::PartialSig::compute(
             &party_two_paillier.ek,
-            &party_two_master_key_rotated.public.c_key.0,
+            &party_two_master_key_rotated.public.c_key,
             &party_two_master_key_rotated.private,
             &ep_party_two_first_message,
             &ep_party_one_first_message.public_share,
