@@ -24,7 +24,7 @@ use cryptography_utils::elliptic::curves::traits::ECScalar;
 use cryptography_utils::{BigInt, FE, GE};
 
 use cryptography_utils::cryptographic_primitives::hashing::traits::KeyedHash;
-use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one, party_two};
+use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one;
 
 use paillier::*;
 
@@ -147,9 +147,9 @@ impl<'a> MasterKey1<'a> {
     }
     pub fn compute_chain_code(
         first_message: &dh_key_exchange::Party1FirstMessage,
-        party2_first_message: &dh_key_exchange::Party2FirstMessage,
+        party2_first_message_public_share: &GE,
     ) -> GE {
-        dh_key_exchange::compute_pubkey_party1(first_message, party2_first_message)
+        dh_key_exchange::compute_pubkey_party1(first_message, party2_first_message_public_share)
     }
 
     pub fn key_gen_first_message() -> party_one::KeyGenFirstMsg {
@@ -191,11 +191,11 @@ impl<'a> MasterKey1<'a> {
     pub fn set_master_key(
         chain_code: &GE,
         party1_first_message: &party_one::KeyGenFirstMsg,
-        party2_first_message: &party_two::KeyGenFirstMsg,
+        party2_first_message_public_share: &GE,
         paillier_key_pair: &party_one::PaillierKeyPair,
     ) -> MasterKey1<'a> {
         let party1_public = Party1Public {
-            q: party_one::compute_pubkey(party1_first_message, party2_first_message),
+            q: party_one::compute_pubkey(party1_first_message, party2_first_message_public_share),
             p1: party1_first_message.public_share.clone(),
             paillier_pub: paillier_key_pair.ek.clone(),
             c_key: RawCiphertext::from(paillier_key_pair.encrypted_share.clone()),

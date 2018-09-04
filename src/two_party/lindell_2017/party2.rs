@@ -17,7 +17,7 @@ use super::traits::ManagementSystem;
 
 use cryptography_utils::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use cryptography_utils::{BigInt, FE, GE};
-use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one, party_two};
+use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two;
 use paillier::proof::Challenge;
 
 use cryptography_utils::cryptographic_primitives::hashing::hmac_sha512;
@@ -152,24 +152,28 @@ impl<'a> MasterKey2<'a> {
         dh_key_exchange::Party2FirstMessage::create()
     }
     pub fn chain_code_second_message(
-        party_one_first_message: &dh_key_exchange::Party1FirstMessage,
-        party_one_second_message: &dh_key_exchange::Party1SecondMessage,
+        party_one_first_message_pk_commitment: &BigInt,
+        party_one_first_message_zk_pok_commitment: &BigInt,
+        party_one_second_message_zk_pok_blind_factor: &BigInt,
+        party_one_second_message_public_share: &GE,
+        party_one_second_message_pk_commitment_blind_factor: &BigInt,
+        party_one_second_message_d_log_proof: &DLogProof,
     ) -> Result<dh_key_exchange::Party2SecondMessage, ProofError> {
         dh_key_exchange::Party2SecondMessage::verify_commitments_and_dlog_proof(
-            &party_one_first_message.pk_commitment,
-            &party_one_first_message.zk_pok_commitment,
-            &party_one_second_message.zk_pok_blind_factor,
-            &party_one_second_message.public_share,
-            &party_one_second_message.pk_commitment_blind_factor,
-            &party_one_second_message.d_log_proof,
+            &party_one_first_message_pk_commitment,
+            &party_one_first_message_zk_pok_commitment,
+            &party_one_second_message_zk_pok_blind_factor,
+            &party_one_second_message_public_share,
+            &party_one_second_message_pk_commitment_blind_factor,
+            &party_one_second_message_d_log_proof,
         )
     }
 
     pub fn compute_chain_code(
-        first_message: &dh_key_exchange::Party1FirstMessage,
+        first_message_public_share: &GE,
         party2_first_message: &dh_key_exchange::Party2FirstMessage,
     ) -> GE {
-        dh_key_exchange::compute_pubkey_party2(party2_first_message, first_message)
+        dh_key_exchange::compute_pubkey_party2(party2_first_message, first_message_public_share)
     }
 
     pub fn key_gen_first_message() -> party_two::KeyGenFirstMsg {
@@ -243,11 +247,11 @@ impl<'a> MasterKey2<'a> {
     pub fn set_master_key(
         chain_code: &GE,
         party2_first_message: &party_two::KeyGenFirstMsg,
-        party1_first_message: &party_one::KeyGenFirstMsg,
+        party1_first_message_public_chare: &GE,
         paillier_public: &party_two::PaillierPublic,
     ) -> MasterKey2<'a> {
         let party2_public = Party2Public {
-            q: party_two::compute_pubkey(party2_first_message, party1_first_message),
+            q: party_two::compute_pubkey(party2_first_message, party1_first_message_public_chare),
             p2: party2_first_message.public_share.clone(),
             paillier_pub: paillier_public.ek.clone(),
             c_key: RawCiphertext::from(paillier_public.encrypted_secret_share.clone()),

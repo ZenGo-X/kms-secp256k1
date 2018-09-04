@@ -79,18 +79,22 @@ mod tests {
         );
 
         let cc_party_two_second_message = party2::MasterKey2::chain_code_second_message(
-            &cc_party_one_first_message,
-            &cc_party_one_second_message,
+            &cc_party_one_first_message.pk_commitment,
+            &cc_party_one_first_message.zk_pok_commitment,
+            &cc_party_one_second_message.zk_pok_blind_factor,
+            &cc_party_one_second_message.public_share,
+            &cc_party_one_second_message.pk_commitment_blind_factor,
+            &cc_party_one_second_message.d_log_proof,
         );
         assert!(cc_party_two_second_message.is_ok());
 
         let party1_cc = party1::MasterKey1::compute_chain_code(
             &cc_party_one_first_message,
-            &cc_party_two_first_message,
+            &cc_party_two_first_message.public_share,
         );
 
         let party2_cc = party2::MasterKey2::compute_chain_code(
-            &cc_party_one_first_message,
+            &cc_party_one_first_message.public_share,
             &cc_party_two_first_message,
         );
 
@@ -111,14 +115,14 @@ mod tests {
         let party_one_master_key = party1::MasterKey1::set_master_key(
             &party1_cc,
             &kg_party_one_first_message,
-            &kg_party_two_first_message,
+            &kg_party_two_first_message.public_share,
             &paillier_key_pair,
         );
 
         let party_two_master_key = party2::MasterKey2::set_master_key(
             &party2_cc,
             &kg_party_two_first_message,
-            &kg_party_one_first_message,
+            &kg_party_one_first_message.public_share,
             &party_two_paillier,
         );
 
@@ -134,14 +138,14 @@ mod tests {
         let party_one_master_key = party1::MasterKey1::set_master_key(
             &party1_cc,
             &kg_party_one_first_message,
-            &kg_party_two_first_message,
+            &kg_party_two_first_message.public_share,
             &paillier_key_pair,
         );
 
         let party_two_master_key = party2::MasterKey2::set_master_key(
             &party2_cc,
             &kg_party_two_first_message,
-            &kg_party_one_first_message,
+            &kg_party_one_first_message.public_share,
             &party_two_paillier,
         );
 
@@ -166,7 +170,7 @@ mod tests {
 
         let signature = party_one::Signature::compute(
             &paillier_key_pair,
-            &partial_sig,
+            &partial_sig.c3,
             &ep_party_one_first_message,
             &ep_party_two_first_message.public_share,
         );
@@ -185,7 +189,7 @@ mod tests {
 
         let signature = party_one::Signature::compute(
             &paillier_key_pair,
-            &partial_sig,
+            &partial_sig.c3,
             &ep_party_one_first_message,
             &ep_party_two_first_message.public_share,
         );
@@ -250,21 +254,25 @@ mod tests {
             &cc_party_two_first_message.d_log_proof,
         );
         let cc_party_two_second_message = party2::MasterKey2::chain_code_second_message(
-            &cc_party_one_first_message,
-            &cc_party_one_second_message,
+            &cc_party_one_first_message.pk_commitment,
+            &cc_party_one_first_message.zk_pok_commitment,
+            &cc_party_one_second_message.zk_pok_blind_factor,
+            &cc_party_one_second_message.public_share,
+            &cc_party_one_second_message.pk_commitment_blind_factor,
+            &cc_party_one_second_message.d_log_proof,
         );
 
         assert!(cc_party_two_second_message.is_ok());
 
         let party2_cc = party2::MasterKey2::compute_chain_code(
-            &cc_party_one_first_message,
+            &cc_party_one_first_message.public_share,
             &cc_party_two_first_message,
         );
 
         let party_two_master_key = party2::MasterKey2::set_master_key(
             &party2_cc,
             &kg_party_two_first_message,
-            &kg_party_one_first_message,
+            &kg_party_one_first_message.public_share,
             &party_two_paillier,
         );
 
@@ -285,7 +293,7 @@ mod tests {
         );
         let signature = party_one::Signature::compute(
             &paillier_key_pair,
-            &partial_sig,
+            &partial_sig.c3,
             &ep_party_one_first_message,
             &ep_party_two_first_message.public_share,
         );
@@ -349,32 +357,36 @@ mod tests {
             &cc_party_two_first_message.d_log_proof,
         );
         let cc_party_two_second_message = party2::MasterKey2::chain_code_second_message(
-            &cc_party_one_first_message,
-            &cc_party_one_second_message,
+            &cc_party_one_first_message.pk_commitment,
+            &cc_party_one_first_message.zk_pok_commitment,
+            &cc_party_one_second_message.zk_pok_blind_factor,
+            &cc_party_one_second_message.public_share,
+            &cc_party_one_second_message.pk_commitment_blind_factor,
+            &cc_party_one_second_message.d_log_proof,
         );
 
         assert!(cc_party_two_second_message.is_ok());
 
         let party1_cc = party1::MasterKey1::compute_chain_code(
             &cc_party_one_first_message,
-            &cc_party_two_first_message,
+            &cc_party_two_first_message.public_share,
         );
         let party2_cc = party2::MasterKey2::compute_chain_code(
-            &cc_party_one_first_message,
+            &cc_party_one_first_message.public_share,
             &cc_party_two_first_message,
         );
         // set master keys:
         let party_one_master_key = party1::MasterKey1::set_master_key(
             &party1_cc,
             &kg_party_one_first_message,
-            &kg_party_two_first_message,
+            &kg_party_two_first_message.public_share,
             &paillier_key_pair,
         );
 
         let party_two_master_key = party2::MasterKey2::set_master_key(
             &party2_cc,
             &kg_party_two_first_message,
-            &kg_party_one_first_message,
+            &kg_party_one_first_message.public_share,
             &party_two_paillier,
         );
         // coin flip:
@@ -402,7 +414,7 @@ mod tests {
         );
         let signature = party_one::Signature::compute(
             &paillier_key_pair,
-            &partial_sig,
+            &partial_sig.c3,
             &ep_party_one_first_message,
             &ep_party_two_first_message.public_share,
         );
@@ -428,7 +440,7 @@ mod tests {
         );
         let signature = party_one::Signature::compute(
             &paillier_key_pair,
-            &partial_sig,
+            &partial_sig.c3,
             &ep_party_one_first_message,
             &ep_party_two_first_message.public_share,
         );
@@ -495,19 +507,23 @@ mod tests {
         );
 
         let party_two_second_message = party2::MasterKey2::chain_code_second_message(
-            &party_one_first_message,
-            &party_one_second_message,
+            &party_one_first_message.pk_commitment,
+            &party_one_first_message.zk_pok_commitment,
+            &party_one_second_message.zk_pok_blind_factor,
+            &party_one_second_message.public_share,
+            &party_one_second_message.pk_commitment_blind_factor,
+            &party_one_second_message.d_log_proof,
         );
 
         assert!(party_two_second_message.is_ok());
 
         let party1_cc = party1::MasterKey1::compute_chain_code(
             &party_one_first_message,
-            &party_two_first_message,
+            &party_two_first_message.public_share,
         );
 
         let party2_cc = party2::MasterKey2::compute_chain_code(
-            &party_one_first_message,
+            &party_one_first_message.public_share,
             &party_two_first_message,
         );
 
