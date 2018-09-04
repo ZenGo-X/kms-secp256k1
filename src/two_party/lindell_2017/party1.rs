@@ -32,7 +32,7 @@ use paillier::*;
 impl ManagementSystem for MasterKey1 {
     // before rotation make sure both parties have the same key
     fn rotate(self, cf: &BigInt) -> MasterKey1 {
-        let rand_str: FE = ECScalar::from_big_int(cf);
+        let rand_str: FE = ECScalar::from(cf);
         let c_key_new = Paillier::mul(
             &self.public.paillier_pub,
             RawCiphertext::from(self.public.c_key.clone()),
@@ -69,9 +69,9 @@ impl ManagementSystem for MasterKey1 {
         );
         let f_l = &f >> 256;
         let f_r = &f & &mask;
-        let f_l_fe: FE = ECScalar::from_big_int(&f_l);
-        let f_r_invert = f_r.invert(&f_l_fe.get_q()).unwrap();
-        let f_r_invert_fe_new: FE = ECScalar::from_big_int(&f_r_invert);
+        let f_l_fe: FE = ECScalar::from(&f_l);
+        let f_r_invert = f_r.invert(&f_l_fe.q()).unwrap();
+        let f_r_invert_fe_new: FE = ECScalar::from(&f_r_invert);
 
         let chain_code = hmac_sha512::HMacSha512::create_hmac(
             &chain_code,
@@ -91,9 +91,9 @@ impl ManagementSystem for MasterKey1 {
                     );
                     let f_l = &f >> 256;
                     let f_r = &f & &mask;
-                    let f_l_fe: FE = ECScalar::from_big_int(&f_l);
-                    let f_r_invert = f_r.invert(&f_l_fe.get_q()).unwrap();
-                    let f_r_invert_fe: FE = ECScalar::from_big_int(&f_r_invert);
+                    let f_l_fe: FE = ECScalar::from(&f_l);
+                    let f_r_invert = f_r.invert(&f_l_fe.q()).unwrap();
+                    let f_r_invert_fe: FE = ECScalar::from(&f_r_invert);
                     (
                         acc.0.scalar_mul(&f_l_fe.get_element()),
                         acc.1.mul(&f_r_invert_fe.get_element()),
