@@ -74,7 +74,7 @@ impl ManagementSystem for MasterKey2 {
         let q_bigint = BigInt::from(master_public_key_vec.as_slice());
         let f = hmac_sha512::HMacSha512::create_hmac(
             &chain_code,
-            vec![&q_bigint, &first, &BigInt::zero()],
+            &vec![&q_bigint, &first, &BigInt::zero()],
         );
         let f_l = &f >> 256;
         let f_r = &f & &mask;
@@ -85,7 +85,7 @@ impl ManagementSystem for MasterKey2 {
         let fr_mul_fl = f_l_fe.mul(&f_r_fe.get_element());
         let chain_code = hmac_sha512::HMacSha512::create_hmac(
             &chain_code,
-            vec![&q_bigint, &first, &BigInt::zero()],
+            &vec![&q_bigint, &first, &BigInt::zero()],
         ) >> 256;
         let public_key = self.public.q.clone();
         let public_key_new = public_key.scalar_mul(&f_l_fe.get_element());
@@ -97,7 +97,7 @@ impl ManagementSystem for MasterKey2 {
                     let q_bigint = BigInt::from(master_public_key_vec.as_slice());
                     let f = hmac_sha512::HMacSha512::create_hmac(
                         &chain_code,
-                        vec![&q_bigint, index, &BigInt::zero()],
+                        &vec![&q_bigint, index, &BigInt::zero()],
                     );
                     let f_l = &f >> 256;
                     let f_r = &f & &mask;
