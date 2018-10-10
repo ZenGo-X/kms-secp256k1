@@ -131,7 +131,7 @@ mod tests {
             party_one_master_key_rotated.get_child(vec![BigInt::from(10)]);
         let rc_party_two_master_key =
             party_two_master_key_rotated.get_child(vec![BigInt::from(10)]);
-        assert_eq!(rc_party_one_master_key.public.q, rc_party_two_master_key.public.q);
+        assert_eq!(rc_party_one_master_key.chain_code, rc_party_two_master_key.chain_code);
 
         // child and then rotate:
         // set master keys:
@@ -290,6 +290,10 @@ mod tests {
 
         let new_party_two_master_key =
             party_two_master_key.get_child(vec![BigInt::from(10), BigInt::from(5)]);
+        let new_party_one_master_key =
+            party_one_master_key.get_child(vec![BigInt::from(10), BigInt::from(5)]);
+        assert_eq!(new_party_one_master_key.public.q, new_party_two_master_key.public.q);
+
         //test signing:
         let message = BigInt::from(1234);
         let ep_party_one_first_message = MasterKey1::key_gen_first_message();
