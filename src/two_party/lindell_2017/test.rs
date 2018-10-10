@@ -131,6 +131,7 @@ mod tests {
             party_one_master_key_rotated.get_child(vec![BigInt::from(10)]);
         let rc_party_two_master_key =
             party_two_master_key_rotated.get_child(vec![BigInt::from(10)]);
+        assert_eq!(rc_party_one_master_key.public.q, rc_party_two_master_key.public.q);
 
         // child and then rotate:
         // set master keys:
