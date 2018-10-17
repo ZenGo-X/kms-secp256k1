@@ -191,8 +191,9 @@ impl MasterKey2 {
             party_two::PaillierPublic,
             Challenge,
             VerificationAid,
+            party_two::PDLchallenge,
         ),
-        ProofError,
+        (),
     > {
         let party_two_second_message =
             party_two::KeyGenSecondMsg::verify_commitments_and_dlog_proof(
@@ -216,6 +217,8 @@ impl MasterKey2 {
             &proof,
         );
 
+        let pdl_chal = party_two_paillier.pdl_challenge(party_one_second_message_public_share);
+
         match range_proof {
             Ok(_proof) => {
                 let (challenge, verification_aid) =
@@ -225,17 +228,35 @@ impl MasterKey2 {
                     party_two_paillier,
                     challenge,
                     verification_aid,
+                    pdl_chal,
                 ))
             }
-            Err(_range_proof_error) => Err(ProofError),
+            Err(_range_proof_error) => Err(()),
         }
     }
 
     pub fn key_gen_third_message(
         proof_result: &CorrectKeyProof,
         verification_aid: &VerificationAid,
-    ) -> Result<(), CorrectKeyProofError> {
-        party_two::PaillierPublic::verify_correct_key(proof_result, verification_aid)
+        pdl_chal: &party_two::PDLchallenge,
+    ) -> Result<(party_two::PDLdecommit), ()> {
+        let verified_correct_key =
+            party_two::PaillierPublic::verify_correct_key(proof_result, verification_aid);
+        let pdl_decom = party_two::PaillierPublic::pdl_decommit_c_tag_tag(&pdl_chal);
+
+        match verified_correct_key {
+            Ok(_proof) => Ok(pdl_decom),
+            Err(_range_proof_error) => Err(()),
+        }
+    }
+
+    pub fn key_gen_fourth_message(
+        pdl_chal: &party_two::PDLchallenge,
+        blindness: &BigInt,
+        q_hat: &GE,
+        c_hat: &BigInt,
+    ) -> Result<(), ()> {
+        party_two::PaillierPublic::verify_pdl(pdl_chal, blindness, q_hat, c_hat)
     }
 
     pub fn set_master_key(

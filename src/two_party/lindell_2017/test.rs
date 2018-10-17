@@ -54,22 +54,34 @@ mod tests {
 
         assert!(key_gen_second_message.is_ok());
 
-        let (party_two_second_message, party_two_paillier, challenge, verification_aid) =
+        let (party_two_second_message, party_two_paillier, challenge, verification_aid, pdl_chal) =
             key_gen_second_message.unwrap();
 
         assert!(party_two_second_message.is_ok());
 
-        let kg_party_one_third_message =
-            MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge);
-        assert!(kg_party_one_third_message.is_ok());
+        let (correct_key_proof, pdl_prover) =
+            MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge, &pdl_chal.c_tag)
+                .expect("error correct key proof");
 
-        assert!(
-            MasterKey2::key_gen_third_message(
-                &kg_party_one_third_message.unwrap(),
-                &verification_aid,
-            ).is_ok()
-        );
+        let pdl_decom_party2 =
+            MasterKey2::key_gen_third_message(&correct_key_proof, &verification_aid, &pdl_chal)
+                .expect("error verifying proof of correct key");
 
+        let pdl_decom_party1 = MasterKey1::key_gen_fourth_message(
+            &pdl_prover,
+            &pdl_chal.c_tag_tag,
+            &kg_party_one_first_message,
+            &pdl_decom_party2.a,
+            &pdl_decom_party2.b,
+            &pdl_decom_party2.blindness,
+        ).expect("pdl error party 2");
+
+        MasterKey2::key_gen_fourth_message(
+            &pdl_chal,
+            &pdl_decom_party1.blindness,
+            &pdl_decom_party1.q_hat,
+            &pdl_prover.c_hat,
+        ).expect("pdl error party1");
         // chain code
         let cc_party_one_first_message = MasterKey1::chain_code_first_message();
         let cc_party_two_first_message = MasterKey2::chain_code_first_message();
@@ -233,21 +245,34 @@ mod tests {
 
         assert!(key_gen_second_message.is_ok());
 
-        let (kg_party_two_second_message, party_two_paillier, challenge, verification_aid) =
+        let (party_two_second_message, party_two_paillier, challenge, verification_aid, pdl_chal) =
             key_gen_second_message.unwrap();
 
-        assert!(kg_party_two_second_message.is_ok());
+        assert!(party_two_second_message.is_ok());
 
-        let kg_party_one_third_message =
-            MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge);
-        assert!(kg_party_one_third_message.is_ok());
+        let (correct_key_proof, pdl_prover) =
+            MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge, &pdl_chal.c_tag)
+                .expect("error correct key proof");
 
-        assert!(
-            MasterKey2::key_gen_third_message(
-                &kg_party_one_third_message.unwrap(),
-                &verification_aid,
-            ).is_ok()
-        );
+        let pdl_decom_party2 =
+            MasterKey2::key_gen_third_message(&correct_key_proof, &verification_aid, &pdl_chal)
+                .expect("error verifying proof of correct key");
+
+        let pdl_decom_party1 = MasterKey1::key_gen_fourth_message(
+            &pdl_prover,
+            &pdl_chal.c_tag_tag,
+            &kg_party_one_first_message,
+            &pdl_decom_party2.a,
+            &pdl_decom_party2.b,
+            &pdl_decom_party2.blindness,
+        ).expect("pdl error party 2");
+
+        MasterKey2::key_gen_fourth_message(
+            &pdl_chal,
+            &pdl_decom_party1.blindness,
+            &pdl_decom_party1.q_hat,
+            &pdl_prover.c_hat,
+        ).expect("pdl error party1");
 
         // chain code
         let cc_party_one_first_message = MasterKey1::chain_code_first_message();
@@ -355,21 +380,34 @@ mod tests {
 
         assert!(key_gen_second_message.is_ok());
 
-        let (kg_party_two_second_message, party_two_paillier, challenge, verification_aid) =
+        let (party_two_second_message, party_two_paillier, challenge, verification_aid, pdl_chal) =
             key_gen_second_message.unwrap();
 
-        assert!(kg_party_two_second_message.is_ok());
+        assert!(party_two_second_message.is_ok());
 
-        let kg_party_one_third_message =
-            MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge);
-        assert!(kg_party_one_third_message.is_ok());
+        let (correct_key_proof, pdl_prover) =
+            MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge, &pdl_chal.c_tag)
+                .expect("error correct key proof");
 
-        assert!(
-            MasterKey2::key_gen_third_message(
-                &kg_party_one_third_message.unwrap(),
-                &verification_aid,
-            ).is_ok()
-        );
+        let pdl_decom_party2 =
+            MasterKey2::key_gen_third_message(&correct_key_proof, &verification_aid, &pdl_chal)
+                .expect("error verifying proof of correct key");
+
+        let pdl_decom_party1 = MasterKey1::key_gen_fourth_message(
+            &pdl_prover,
+            &pdl_chal.c_tag_tag,
+            &kg_party_one_first_message,
+            &pdl_decom_party2.a,
+            &pdl_decom_party2.b,
+            &pdl_decom_party2.blindness,
+        ).expect("pdl error party 2");
+
+        MasterKey2::key_gen_fourth_message(
+            &pdl_chal,
+            &pdl_decom_party1.blindness,
+            &pdl_decom_party1.q_hat,
+            &pdl_prover.c_hat,
+        ).expect("pdl error party1");
 
         // chain code
         let cc_party_one_first_message = MasterKey1::chain_code_first_message();
@@ -471,49 +509,64 @@ mod tests {
 
     #[test]
     fn test_key_gen() {
-        let party_one_first_message = MasterKey1::key_gen_first_message();
-        let party_two_first_message = MasterKey2::key_gen_first_message();
+        // key gen
+        let kg_party_one_first_message = MasterKey1::key_gen_first_message();
+        let kg_party_two_first_message = MasterKey2::key_gen_first_message();
         let (
-            party_one_second_message,
+            kg_party_one_second_message,
             paillier_key_pair,
             rp_encrypted_pairs,
             rp_challenge,
             rp_proof,
         ) = MasterKey1::key_gen_second_message(
-            &party_one_first_message,
-            &party_two_first_message.d_log_proof,
+            &kg_party_one_first_message,
+            &kg_party_two_first_message.d_log_proof,
         );
 
         let key_gen_second_message = MasterKey2::key_gen_second_message(
-            &party_one_first_message.pk_commitment,
-            &party_one_first_message.zk_pok_commitment,
-            &party_one_second_message.zk_pok_blind_factor,
-            &party_one_second_message.public_share,
-            &party_one_second_message.pk_commitment_blind_factor,
-            &party_one_second_message.d_log_proof,
+            &kg_party_one_first_message.pk_commitment,
+            &kg_party_one_first_message.zk_pok_commitment,
+            &kg_party_one_second_message.zk_pok_blind_factor,
+            &kg_party_one_second_message.public_share,
+            &kg_party_one_second_message.pk_commitment_blind_factor,
+            &kg_party_one_second_message.d_log_proof,
             &paillier_key_pair.ek,
             &paillier_key_pair.encrypted_share,
             &rp_challenge,
             &rp_encrypted_pairs,
             &rp_proof,
         );
+
         assert!(key_gen_second_message.is_ok());
 
-        let (party_two_second_message, _party_two_paillier, challenge, verification_aid) =
+        let (party_two_second_message, _party_two_paillier, challenge, verification_aid, pdl_chal) =
             key_gen_second_message.unwrap();
 
         assert!(party_two_second_message.is_ok());
 
-        let party_one_third_message =
-            MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge);
-        assert!(party_one_third_message.is_ok());
+        let (correct_key_proof, pdl_prover) =
+            MasterKey1::key_gen_third_message(&paillier_key_pair, &challenge, &pdl_chal.c_tag)
+                .expect("error correct key proof");
 
-        assert!(
-            MasterKey2::key_gen_third_message(
-                &party_one_third_message.unwrap(),
-                &verification_aid,
-            ).is_ok()
-        );
+        let pdl_decom_party2 =
+            MasterKey2::key_gen_third_message(&correct_key_proof, &verification_aid, &pdl_chal)
+                .expect("error verifying proof of correct key");
+
+        let pdl_decom_party1 = MasterKey1::key_gen_fourth_message(
+            &pdl_prover,
+            &pdl_chal.c_tag_tag,
+            &kg_party_one_first_message,
+            &pdl_decom_party2.a,
+            &pdl_decom_party2.b,
+            &pdl_decom_party2.blindness,
+        ).expect("pdl error party 2");
+
+        MasterKey2::key_gen_fourth_message(
+            &pdl_chal,
+            &pdl_decom_party1.blindness,
+            &pdl_decom_party1.q_hat,
+            &pdl_prover.c_hat,
+        ).expect("pdl error party1");
     }
 
     #[test]

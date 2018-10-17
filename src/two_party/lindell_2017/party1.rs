@@ -176,8 +176,26 @@ impl MasterKey1 {
     pub fn key_gen_third_message(
         paillier_key_pair: &party_one::PaillierKeyPair,
         challenge: &proof::Challenge,
-    ) -> Result<CorrectKeyProof, CorrectKeyProofError> {
-        party_one::PaillierKeyPair::generate_proof_correct_key(&paillier_key_pair, &challenge)
+        pdl_chal: &BigInt,
+    ) -> Result<(CorrectKeyProof, party_one::PDL), ()> {
+        let pdl_prover = paillier_key_pair.pdl_first_stage(pdl_chal);
+        let correct_key_proof =
+            party_one::PaillierKeyPair::generate_proof_correct_key(&paillier_key_pair, &challenge);
+        match correct_key_proof {
+            Ok(proof) => Ok((proof, pdl_prover)),
+            Err(_range_proof_error) => Err(()),
+        }
+    }
+
+    pub fn key_gen_fourth_message(
+        pdl: &party_one::PDL,
+        c_tag_tag: &BigInt,
+        first_message: &party_one::KeyGenFirstMsg,
+        a: &BigInt,
+        b: &BigInt,
+        blindness: &BigInt,
+    ) -> Result<(party_one::PDLdecommit), ()> {
+        party_one::PaillierKeyPair::pdl_second_stage(pdl, c_tag_tag, first_message, a, b, blindness)
     }
 
     pub fn set_master_key(
