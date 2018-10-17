@@ -76,7 +76,7 @@ impl ManagementSystem for MasterKey1 {
         let chain_code = hmac_sha512::HMacSha512::create_hmac(
             &chain_code,
             &vec![&q_bigint, &first, &BigInt::zero()],
-        )>>256;
+        ) >> 256;
         let public_key = self.public.q.clone();
         let public_key_new = public_key.scalar_mul(&f_l_fe.get_element());
         let (public_key_new_child, f_r_invert_fe_new_child, _f_new) =
