@@ -18,7 +18,6 @@ use super::traits::ManagementSystem;
 use cryptography_utils::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use cryptography_utils::{BigInt, FE, GE};
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two;
-use paillier::proof::Challenge;
 
 use cryptography_utils::cryptographic_primitives::hashing::hmac_sha512;
 use cryptography_utils::cryptographic_primitives::hashing::traits::KeyedHash;
@@ -185,12 +184,11 @@ impl MasterKey2 {
         challenge: &ChallengeBits,
         encrypted_pairs: &EncryptedPairs,
         proof: &Proof,
+        correct_key_proof: &NICorrectKeyProof,
     ) -> Result<
         (
             Result<party_two::KeyGenSecondMsg, ProofError>,
             party_two::PaillierPublic,
-            Challenge,
-            VerificationAid,
             party_two::PDLchallenge,
         ),
         (),
@@ -219,35 +217,20 @@ impl MasterKey2 {
 
         let pdl_chal = party_two_paillier.pdl_challenge(party_one_second_message_public_share);
 
+        let correct_key_verify = correct_key_proof.verify(&party_two_paillier.ek);
+
         match range_proof {
-            Ok(_proof) => {
-                let (challenge, verification_aid) =
-                    party_two::PaillierPublic::generate_correct_key_challenge(&party_two_paillier);
-                Ok((
-                    party_two_second_message,
-                    party_two_paillier,
-                    challenge,
-                    verification_aid,
-                    pdl_chal,
-                ))
-            }
+            Ok(_proof) => match correct_key_verify {
+                Ok(_proof) => Ok((party_two_second_message, party_two_paillier, pdl_chal)),
+                Err(_correct_key_error) => Err(()),
+            },
             Err(_range_proof_error) => Err(()),
         }
     }
 
-    pub fn key_gen_third_message(
-        proof_result: &CorrectKeyProof,
-        verification_aid: &VerificationAid,
-        pdl_chal: &party_two::PDLchallenge,
-    ) -> Result<(party_two::PDLdecommit), ()> {
-        let verified_correct_key =
-            party_two::PaillierPublic::verify_correct_key(proof_result, verification_aid);
+    pub fn key_gen_third_message(pdl_chal: &party_two::PDLchallenge) -> party_two::PDLdecommit {
         let pdl_decom = party_two::PaillierPublic::pdl_decommit_c_tag_tag(&pdl_chal);
-
-        match verified_correct_key {
-            Ok(_proof) => Ok(pdl_decom),
-            Err(_range_proof_error) => Err(()),
-        }
+        pdl_decom
     }
 
     pub fn key_gen_fourth_message(

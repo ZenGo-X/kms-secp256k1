@@ -156,35 +156,32 @@ impl MasterKey1 {
         EncryptedPairs,
         ChallengeBits,
         Proof,
+        NICorrectKeyProof,
     ) {
         let key_gen_second_message =
             party_one::KeyGenSecondMsg::verify_and_decommit(&first_message, proof).expect("");
 
         let paillier_key_pair =
             party_one::PaillierKeyPair::generate_keypair_and_encrypted_share(first_message);
-        let (encrypted_pairs, challenge, proof) =
+        let (encrypted_pairs, challenge, range_proof) =
             party_one::PaillierKeyPair::generate_range_proof(&paillier_key_pair, &first_message);
+        let correct_key_proof =
+            party_one::PaillierKeyPair::generate_ni_proof_correct_key(&paillier_key_pair);
         (
             key_gen_second_message,
             paillier_key_pair,
             encrypted_pairs,
             challenge,
-            proof,
+            range_proof,
+            correct_key_proof,
         )
     }
 
     pub fn key_gen_third_message(
         paillier_key_pair: &party_one::PaillierKeyPair,
-        challenge: &proof::Challenge,
         pdl_chal: &BigInt,
-    ) -> Result<(CorrectKeyProof, party_one::PDL), ()> {
-        let pdl_prover = paillier_key_pair.pdl_first_stage(pdl_chal);
-        let correct_key_proof =
-            party_one::PaillierKeyPair::generate_proof_correct_key(&paillier_key_pair, &challenge);
-        match correct_key_proof {
-            Ok(proof) => Ok((proof, pdl_prover)),
-            Err(_range_proof_error) => Err(()),
-        }
+    ) -> party_one::PDL {
+        paillier_key_pair.pdl_first_stage(pdl_chal)
     }
 
     pub fn key_gen_fourth_message(
