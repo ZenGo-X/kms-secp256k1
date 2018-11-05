@@ -70,7 +70,7 @@ impl ManagementSystem for MasterKey1 {
         let f_l = &f >> 256;
         let f_r = &f & &mask;
         let f_l_fe: FE = ECScalar::from(&f_l);
-        let f_r_invert = f_r.invert(&f_l_fe.q()).unwrap();
+        let f_r_invert = f_r.invert(&FE::q()).unwrap();
         let f_r_invert_fe_new: FE = ECScalar::from(&f_r_invert);
 
         let chain_code = hmac_sha512::HMacSha512::create_hmac(
@@ -92,7 +92,7 @@ impl ManagementSystem for MasterKey1 {
                     let f_l = &f >> 256;
                     let f_r = &f & &mask;
                     let f_l_fe: FE = ECScalar::from(&f_l);
-                    let f_r_invert = f_r.invert(&f_l_fe.q()).unwrap();
+                    let f_r_invert = f_r.invert(&FE::q()).unwrap();
                     let f_r_invert_fe: FE = ECScalar::from(&f_r_invert);
                     (
                         acc.0.scalar_mul(&f_l_fe.get_element()),
