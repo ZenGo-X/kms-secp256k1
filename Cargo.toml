@@ -14,16 +14,27 @@ rust-gmp = "0.5.0"
 rand = "0.5"
 serde = "1.0"
 serde_derive = "1.0"
-paillier = { git = "https://github.com/mortendahl/rust-paillier" }
+
+[dependencies.paillier]
+git = "https://github.com/mortendahl/rust-paillier"
+branch = "new_correct_key"
+
+[dependencies.multi-party-schnorr]
+git = "https://github.com/KZen-networks/multi-party-schnorr"
 
 [dependencies.cryptography-utils]
 git = "https://github.com/KZen-networks/cryptography-utils"
 features =  ["curvesecp256k1"]
-branch = "freeze-mvp-subzero"
 
 [dependencies.multi-party-ecdsa]
 git = "https://github.com/KZen-networks/multi-party-ecdsa"
-branch = "freeze-mvp-subzero"
+branch = "pdl-sub-protocol"
+
+[dependencies.centipede]
+git = "https://github.com/KZen-networks/centipede"
+
+
+
 
 [patch.crates-io]
 rust-gmp = { version = "0.5.0", features = ["serde_support"], git = "https://github.com/KZen-networks/rust-gmp" }
