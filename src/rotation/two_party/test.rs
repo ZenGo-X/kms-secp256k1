@@ -1,4 +1,3 @@
-
 /*
     KMS
 
@@ -15,14 +14,11 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
-
-
-
 #[cfg(test)]
 mod tests {
+    use cryptography_utils::elliptic::curves::traits::ECScalar;
     use rotation::two_party::party1::Rotation1;
     use rotation::two_party::party2::Rotation2;
-    use cryptography_utils::elliptic::curves::traits::ECScalar;
 
     #[test]
     fn test_coin_flip() {
@@ -36,6 +32,9 @@ mod tests {
             &party2_first_message,
             &party1_first_message,
         );
-        assert_eq!(random1.rotation.get_element(), random2.rotation.get_element());
+        assert_eq!(
+            random1.rotation.get_element(),
+            random2.rotation.get_element()
+        );
     }
 }

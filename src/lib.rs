@@ -17,16 +17,16 @@
 extern crate serde_derive;
 extern crate serde;
 
+extern crate centipede;
 extern crate cryptography_utils;
 extern crate multi_party_ecdsa;
 extern crate multi_party_schnorr;
 extern crate paillier;
-extern crate centipede;
 
-pub mod ecdsa;
-pub mod schnorr;
 pub mod chain_code;
+pub mod ecdsa;
 pub mod rotation;
+pub mod schnorr;
 pub mod traits;
 pub use traits::*;
 pub mod poc;

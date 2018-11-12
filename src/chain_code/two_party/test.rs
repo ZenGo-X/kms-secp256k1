@@ -10,7 +10,6 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
-
 #[cfg(test)]
 mod tests {
     use chain_code::two_party::party1;
@@ -32,8 +31,7 @@ mod tests {
         );
         assert!(cc_party_two_second_message.is_ok());
 
-
-        let party1_cc =  party1::ChainCode1::compute_chain_code(
+        let party1_cc = party1::ChainCode1::compute_chain_code(
             &cc_party_one_first_message,
             &cc_party_two_first_message.public_share,
         );

@@ -12,8 +12,6 @@
 use cryptography_utils::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use cryptography_utils::elliptic::curves::secp256_k1::Secp256k1Scalar;
 
-
-
 use super::Rotation;
 
 pub struct Rotation1 {}
@@ -32,12 +30,12 @@ impl Rotation1 {
         party2_first_message: &coin_flip_optimal_rounds::Party2FirstMessage,
         m1: &Secp256k1Scalar,
         r1: &Secp256k1Scalar,
-    ) -> (
-        coin_flip_optimal_rounds::Party1SecondMessage,
-        Rotation,
-    ) {
-
-        let (res1, res2) = coin_flip_optimal_rounds::Party1SecondMessage::reveal(&party2_first_message.seed, m1, r1);
-        (res1, Rotation {rotation:res2})
+    ) -> (coin_flip_optimal_rounds::Party1SecondMessage, Rotation) {
+        let (res1, res2) = coin_flip_optimal_rounds::Party1SecondMessage::reveal(
+            &party2_first_message.seed,
+            m1,
+            r1,
+        );
+        (res1, Rotation { rotation: res2 })
     }
 }

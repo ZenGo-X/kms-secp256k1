@@ -14,15 +14,12 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/Kms/blob/master/LICENSE>
 */
 
-
-use cryptography_utils::GE;
-use multi_party_schnorr::protocols::multisig::KeyPair;
 use chain_code::two_party::party1::ChainCode1;
 use chain_code::two_party::party2::ChainCode2;
+use cryptography_utils::GE;
+use multi_party_schnorr::protocols::multisig::KeyPair;
 
 // since this special case requires two out of two signers we ignore the "accountable" property
-
-
 
 pub struct MasterKey1 {
     local_key_pair: KeyPair,
@@ -30,13 +27,11 @@ pub struct MasterKey1 {
     pubkey: GE,
 }
 
-
 pub struct MasterKey2 {
     local_key_pair: KeyPair,
     chain_code: ChainCode2,
     pubkey: GE,
 }
-
 
 pub mod party1;
 pub mod party2;

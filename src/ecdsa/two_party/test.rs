@@ -13,9 +13,9 @@
 #[cfg(test)]
 mod tests {
     use super::super::{MasterKey1, MasterKey2};
-    use cryptography_utils::BigInt;
     use chain_code::two_party::party1;
     use chain_code::two_party::party2;
+    use cryptography_utils::BigInt;
     use rotation::two_party::party1::Rotation1;
     use rotation::two_party::party2::Rotation2;
     use ManagementSystem;
@@ -70,14 +70,16 @@ mod tests {
             &pdl_decom_party2.a,
             &pdl_decom_party2.b,
             &pdl_decom_party2.blindness,
-        ).expect("pdl error party 2");
+        )
+        .expect("pdl error party 2");
 
         MasterKey2::key_gen_fourth_message(
             &pdl_chal,
             &pdl_decom_party1.blindness,
             &pdl_decom_party1.q_hat,
             &pdl_prover.c_hat,
-        ).expect("pdl error party1");
+        )
+        .expect("pdl error party1");
 
         // chain code
         let cc_party_one_first_message = party1::ChainCode1::chain_code_first_message();
@@ -93,7 +95,7 @@ mod tests {
         );
         assert!(cc_party_two_second_message.is_ok());
 
-        let party1_cc =  party1::ChainCode1::compute_chain_code(
+        let party1_cc = party1::ChainCode1::compute_chain_code(
             &cc_party_one_first_message,
             &cc_party_two_first_message.public_share,
         );
@@ -157,7 +159,6 @@ mod tests {
             &party_two_paillier,
         );
 
-
         //test signing:
         let message = BigInt::from(1234);
         let sign_party_two_first_message = MasterKey2::sign_first_message();
@@ -166,12 +167,14 @@ mod tests {
             &sign_party_two_first_message,
             &sign_party_one_first_message.public_share,
             &sign_party_one_first_message.d_log_proof,
-            &message);
+            &message,
+        );
         let sign_party_one_second_message = party_one_master_key.sign_second_message(
             &sign_party_two_second_message,
             &sign_party_two_first_message,
             &sign_party_one_first_message,
-            &message);
+            &message,
+        );
         sign_party_one_second_message.expect("bad signature");
 
         let new_party_one_master_key = party_one_master_key.get_child(vec![BigInt::from(10)]);
@@ -182,35 +185,33 @@ mod tests {
             &sign_party_two_first_message,
             &sign_party_one_first_message.public_share,
             &sign_party_one_first_message.d_log_proof,
-            &message);
+            &message,
+        );
         let sign_party_one_second_message = new_party_one_master_key.sign_second_message(
             &sign_party_two_second_message,
             &sign_party_two_first_message,
             &sign_party_one_first_message,
-            &message);
+            &message,
+        );
         sign_party_one_second_message.expect("bad signature");
-
-
 
         let cr_party_one_master_key = new_party_one_master_key.rotate(&random1);
         let cr_party_two_master_key = new_party_two_master_key.rotate(&random2);
-
-
-
 
         // sign with child and rotated keys
         let sign_party_two_second_message = cr_party_two_master_key.sign_second_message(
             &sign_party_two_first_message,
             &sign_party_one_first_message.public_share,
             &sign_party_one_first_message.d_log_proof,
-            &message);
+            &message,
+        );
         let sign_party_one_second_message = cr_party_one_master_key.sign_second_message(
             &sign_party_two_second_message,
             &sign_party_two_first_message,
             &sign_party_one_first_message,
-            &message);
+            &message,
+        );
         sign_party_one_second_message.expect("bad signature");
-
     }
     #[test]
     fn test_get_child() {
@@ -263,14 +264,16 @@ mod tests {
             &pdl_decom_party2.a,
             &pdl_decom_party2.b,
             &pdl_decom_party2.blindness,
-        ).expect("pdl error party 2");
+        )
+        .expect("pdl error party 2");
 
         MasterKey2::key_gen_fourth_message(
             &pdl_chal,
             &pdl_decom_party1.blindness,
             &pdl_decom_party1.q_hat,
             &pdl_prover.c_hat,
-        ).expect("pdl error party1");
+        )
+        .expect("pdl error party1");
 
         // chain code
         let cc_party_one_first_message = party1::ChainCode1::chain_code_first_message();
@@ -286,7 +289,7 @@ mod tests {
         );
         assert!(cc_party_two_second_message.is_ok());
 
-        let party1_cc =  party1::ChainCode1::compute_chain_code(
+        let party1_cc = party1::ChainCode1::compute_chain_code(
             &cc_party_one_first_message,
             &cc_party_two_first_message.public_share,
         );
@@ -302,7 +305,6 @@ mod tests {
             &kg_party_two_first_message.public_share,
             &paillier_key_pair,
         );
-
 
         let party_two_master_key = MasterKey2::set_master_key(
             &party2_cc.chain_code,
@@ -328,12 +330,14 @@ mod tests {
             &sign_party_two_first_message,
             &sign_party_one_first_message.public_share,
             &sign_party_one_first_message.d_log_proof,
-            &message);
+            &message,
+        );
         let sign_party_one_second_message = party_one_master_key.sign_second_message(
             &sign_party_two_second_message,
             &sign_party_two_first_message,
             &sign_party_one_first_message,
-            &message);
+            &message,
+        );
         sign_party_one_second_message.expect("bad signature");
 
         // test sign for child
@@ -344,12 +348,14 @@ mod tests {
             &sign_party_two_first_message,
             &sign_party_one_first_message.public_share,
             &sign_party_one_first_message.d_log_proof,
-            &message);
+            &message,
+        );
         let sign_party_one_second_message = new_party_one_master_key.sign_second_message(
             &sign_party_two_second_message,
             &sign_party_two_first_message,
             &sign_party_one_first_message,
-            &message);
+            &message,
+        );
         sign_party_one_second_message.expect("bad signature");
     }
     #[test]
@@ -403,14 +409,16 @@ mod tests {
             &pdl_decom_party2.a,
             &pdl_decom_party2.b,
             &pdl_decom_party2.blindness,
-        ).expect("pdl error party 2");
+        )
+        .expect("pdl error party 2");
 
         MasterKey2::key_gen_fourth_message(
             &pdl_chal,
             &pdl_decom_party1.blindness,
             &pdl_decom_party1.q_hat,
             &pdl_prover.c_hat,
-        ).expect("pdl error party1");
+        )
+        .expect("pdl error party1");
 
         // chain code
         let cc_party_one_first_message = party1::ChainCode1::chain_code_first_message();
@@ -426,7 +434,7 @@ mod tests {
         );
         assert!(cc_party_two_second_message.is_ok());
 
-        let party1_cc =  party1::ChainCode1::compute_chain_code(
+        let party1_cc = party1::ChainCode1::compute_chain_code(
             &cc_party_one_first_message,
             &cc_party_two_first_message.public_share,
         );
@@ -469,20 +477,20 @@ mod tests {
             &sign_party_two_first_message,
             &sign_party_one_first_message.public_share,
             &sign_party_one_first_message.d_log_proof,
-            &message);
+            &message,
+        );
         let sign_party_one_second_message = party_one_master_key.sign_second_message(
             &sign_party_two_second_message,
             &sign_party_two_first_message,
             &sign_party_one_first_message,
-            &message);
+            &message,
+        );
         sign_party_one_second_message.expect("bad signature");
 
         //rotate:
 
         let party_one_master_key_rotated = party_one_master_key.rotate(&random1);
         let party_two_master_key_rotated = party_two_master_key.rotate(&random2);
-
-
 
         // sign after rotate:
         //test signing:
@@ -493,12 +501,14 @@ mod tests {
             &sign_party_two_first_message,
             &sign_party_one_first_message.public_share,
             &sign_party_one_first_message.d_log_proof,
-            &message);
+            &message,
+        );
         let sign_party_one_second_message = party_one_master_key_rotated.sign_second_message(
             &sign_party_two_second_message,
             &sign_party_two_first_message,
             &sign_party_one_first_message,
-            &message);
+            &message,
+        );
         sign_party_one_second_message.expect("bad signature");
     }
 
@@ -552,15 +562,16 @@ mod tests {
             &pdl_decom_party2.a,
             &pdl_decom_party2.b,
             &pdl_decom_party2.blindness,
-        ).expect("pdl error party 2");
+        )
+        .expect("pdl error party 2");
 
         MasterKey2::key_gen_fourth_message(
             &pdl_chal,
             &pdl_decom_party1.blindness,
             &pdl_decom_party1.q_hat,
             &pdl_prover.c_hat,
-        ).expect("pdl error party1");
+        )
+        .expect("pdl error party1");
     }
-
 
 }

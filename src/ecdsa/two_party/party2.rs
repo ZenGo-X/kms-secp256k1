@@ -14,18 +14,18 @@ use ManagementSystem;
 use cryptography_utils::{BigInt, FE, GE};
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two;
 
+use super::{MasterKey2, Party2Public};
+use chain_code::two_party::party2::ChainCode2;
 use cryptography_utils::cryptographic_primitives::hashing::hmac_sha512;
 use cryptography_utils::cryptographic_primitives::hashing::traits::KeyedHash;
 use cryptography_utils::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
 use cryptography_utils::cryptographic_primitives::proofs::ProofError;
 use cryptography_utils::elliptic::curves::traits::ECPoint;
 use cryptography_utils::elliptic::curves::traits::ECScalar;
-use chain_code::two_party::party2::ChainCode2;
-use rotation::two_party::Rotation;
-use super::{MasterKey2, Party2Public};
 use paillier::*;
+use rotation::two_party::Rotation;
 
-pub struct SignMessage{
+pub struct SignMessage {
     pub partial_sig: party_two::PartialSig,
     pub second_message: party_two::EphKeyGenSecondMsg,
 }
@@ -54,7 +54,10 @@ impl ManagementSystem for MasterKey2 {
         };
         MasterKey2 {
             public,
-            private: party_two::Party2Private::update_private_key(&self.private, &rand_str_invert_fe.to_big_int()),
+            private: party_two::Party2Private::update_private_key(
+                &self.private,
+                &rand_str_invert_fe.to_big_int(),
+            ),
             chain_code: self.chain_code,
         }
     }
@@ -67,15 +70,12 @@ impl ManagementSystem for MasterKey2 {
         // calc first element:
         let first = location_in_hir.remove(0);
         let pub_key_bi = public_key.bytes_compressed_to_big_int();
-        let f = hmac_sha512::HMacSha512::create_hmac(
-            &chain_code_bi,
-            &vec![&pub_key_bi, &first],
-        );
+        let f = hmac_sha512::HMacSha512::create_hmac(&chain_code_bi, &vec![&pub_key_bi, &first]);
         let f_l = &f >> 256;
         let f_r = &f & &mask;
         let f_l_fe: FE = ECScalar::from(&f_l);
-        let f_r_fe :FE = ECScalar::from(&f_r);
-        let chain_code = &self.chain_code.chain_code *  &f_r_fe ;
+        let f_r_fe: FE = ECScalar::from(&f_r);
+        let chain_code = &self.chain_code.chain_code * &f_r_fe;
         let pub_key = public_key * &f_l_fe;
 
         let (public_key_new_child, f_l_new, cc_new) =
@@ -90,13 +90,9 @@ impl ManagementSystem for MasterKey2 {
                     let f_l = &f >> 256;
                     let f_r = &f & &mask;
                     let f_l_fe: FE = ECScalar::from(&f_l);
-                    let f_r_fe :FE = ECScalar::from(&f_r);
-                    (
-                        acc.0 * &f_l_fe,
-                        f_l_fe * &acc.1,
-                        &acc.2 * &f_r_fe,
-
-                    )});
+                    let f_r_fe: FE = ECScalar::from(&f_r);
+                    (acc.0 * &f_l_fe, f_l_fe * &acc.1, &acc.2 * &f_r_fe)
+                });
 
         let c_key_new = Paillier::mul(
             &self.public.paillier_pub,
@@ -109,23 +105,19 @@ impl ManagementSystem for MasterKey2 {
 
         let public = Party2Public {
             q: public_key_new_child,
-            p2: p2_old ,
+            p2: p2_old,
             paillier_pub: self.public.paillier_pub.clone(),
             c_key: c_key.to_owned(),
         };
         MasterKey2 {
             public,
-            private: party_two::Party2Private::update_private_key(
-                &self.private,
-                &BigInt::one(),
-            ),
-            chain_code: ChainCode2{chain_code:cc_new},
+            private: party_two::Party2Private::update_private_key(&self.private, &BigInt::one()),
+            chain_code: ChainCode2 { chain_code: cc_new },
         }
     }
 }
 
 impl MasterKey2 {
-
     pub fn set_master_key(
         chain_code: &GE,
         party2_first_message: &party_two::KeyGenFirstMsg,
@@ -142,7 +134,9 @@ impl MasterKey2 {
         MasterKey2 {
             public: party2_public,
             private: party2_private,
-            chain_code: ChainCode2{chain_code: chain_code.clone()},
+            chain_code: ChainCode2 {
+                chain_code: chain_code.clone(),
+            },
         }
     }
     pub fn key_gen_first_message() -> party_two::KeyGenFirstMsg {
@@ -224,32 +218,31 @@ impl MasterKey2 {
         party_two::PaillierPublic::verify_pdl(pdl_chal, blindness, q_hat, c_hat)
     }
 
-
-
     pub fn sign_first_message() -> party_two::EphKeyGenFirstMsg {
         party_two::EphKeyGenFirstMsg::create_commitments()
     }
-    pub fn sign_second_message(&self,
-                               eph_first_message_party_two: &party_two::EphKeyGenFirstMsg,
-                               eph_first_message_public_share_party_one: &GE,
-                               proof: &DLogProof,
-        message : &BigInt
-    ) ->
-        SignMessage
-
-    {
+    pub fn sign_second_message(
+        &self,
+        eph_first_message_party_two: &party_two::EphKeyGenFirstMsg,
+        eph_first_message_public_share_party_one: &GE,
+        proof: &DLogProof,
+        message: &BigInt,
+    ) -> SignMessage {
         let eph_key_gen_second_message =
-            party_two::EphKeyGenSecondMsg::verify_and_decommit(eph_first_message_party_two, proof).expect("");
+            party_two::EphKeyGenSecondMsg::verify_and_decommit(eph_first_message_party_two, proof)
+                .expect("");
 
-        let partial_sig = party_two::PartialSig::compute(&self.public.paillier_pub,
-                                                         &self.public.c_key,
-                                                         &self.private,
-                                                         &eph_first_message_party_two,
-                                                         eph_first_message_public_share_party_one,
-                                                         message);
-        SignMessage{partial_sig, second_message: eph_key_gen_second_message}
-
+        let partial_sig = party_two::PartialSig::compute(
+            &self.public.paillier_pub,
+            &self.public.c_key,
+            &self.private,
+            &eph_first_message_party_two,
+            eph_first_message_public_share_party_one,
+            message,
+        );
+        SignMessage {
+            partial_sig,
+            second_message: eph_key_gen_second_message,
+        }
     }
-
-
 }

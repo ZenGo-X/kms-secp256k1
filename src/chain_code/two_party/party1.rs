@@ -14,7 +14,6 @@ use cryptography_utils::cryptographic_primitives::twoparty::dh_key_exchange;
 
 use cryptography_utils::GE;
 
-
 pub struct ChainCode1 {
     pub chain_code: GE,
 }
@@ -33,6 +32,11 @@ impl ChainCode1 {
         first_message: &dh_key_exchange::Party1FirstMessage,
         party2_first_message_public_share: &GE,
     ) -> ChainCode1 {
-        ChainCode1 {chain_code: dh_key_exchange::compute_pubkey_party1(first_message, party2_first_message_public_share)}
+        ChainCode1 {
+            chain_code: dh_key_exchange::compute_pubkey_party1(
+                first_message,
+                party2_first_message_public_share,
+            ),
+        }
     }
 }

@@ -33,6 +33,6 @@ impl Rotation2 {
             &party2_first_message.seed,
             &party1_first_message.proof.com,
         );
-        Rotation {rotation}
+        Rotation { rotation }
     }
 }

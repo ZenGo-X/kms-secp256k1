@@ -9,22 +9,22 @@
     version 3 of the License, or (at your option) any later version.
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
-use ManagementSystem;
 use cryptography_utils::cryptographic_primitives::hashing::hmac_sha512;
 use cryptography_utils::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
 use cryptography_utils::elliptic::curves::traits::ECPoint;
 use cryptography_utils::elliptic::curves::traits::ECScalar;
 use cryptography_utils::{BigInt, FE, GE};
+use ManagementSystem;
 
+use super::{MasterKey1, Party1Public};
+use chain_code::two_party::party1::ChainCode1;
 use cryptography_utils::cryptographic_primitives::hashing::traits::KeyedHash;
+use ecdsa::two_party::party2::SignMessage;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::EphKeyGenFirstMsg;
-use ecdsa::two_party::party2::SignMessage;
-use chain_code::two_party::party1::ChainCode1;
-use rotation::two_party::Rotation;
-use super::{MasterKey1, Party1Public};
-use Errors::{self, SignError};
 use paillier::*;
+use rotation::two_party::Rotation;
+use Errors::{self, SignError};
 
 impl ManagementSystem for MasterKey1 {
     // before rotation make sure both parties have the same key
@@ -46,7 +46,10 @@ impl ManagementSystem for MasterKey1 {
         };
         MasterKey1 {
             public,
-            private: party_one::Party1Private::update_private_key(&self.private, &cf.rotation.to_big_int()),
+            private: party_one::Party1Private::update_private_key(
+                &self.private,
+                &cf.rotation.to_big_int(),
+            ),
             chain_code: self.chain_code,
         }
     }
@@ -59,15 +62,12 @@ impl ManagementSystem for MasterKey1 {
         // calc first element:
         let first = location_in_hir.remove(0);
         let pub_key_bi = public_key.bytes_compressed_to_big_int();
-        let f = hmac_sha512::HMacSha512::create_hmac(
-            &chain_code_bi,
-            &vec![&pub_key_bi, &first],
-        );
+        let f = hmac_sha512::HMacSha512::create_hmac(&chain_code_bi, &vec![&pub_key_bi, &first]);
         let f_l = &f >> 256;
         let f_r = &f & &mask;
         let f_l_fe: FE = ECScalar::from(&f_l);
-        let f_r_fe :FE = ECScalar::from(&f_r);
-        let chain_code = &self.chain_code.chain_code *  &f_r_fe ;
+        let f_r_fe: FE = ECScalar::from(&f_r);
+        let chain_code = &self.chain_code.chain_code * &f_r_fe;
         let pub_key = public_key * &f_l_fe;
 
         let (public_key_new_child, f_l_new, cc_new) =
@@ -82,14 +82,10 @@ impl ManagementSystem for MasterKey1 {
                     let f_l = &f >> 256;
                     let f_r = &f & &mask;
                     let f_l_fe: FE = ECScalar::from(&f_l);
-                    let f_r_fe :FE = ECScalar::from(&f_r);
+                    let f_r_fe: FE = ECScalar::from(&f_r);
 
-                    (
-                        acc.0 * &f_l_fe,
-                        f_l_fe * &acc.1,
-                        &acc.2 * &f_r_fe,
-
-                    )});
+                    (acc.0 * &f_l_fe, f_l_fe * &acc.1, &acc.2 * &f_r_fe)
+                });
 
         let c_key_new = Paillier::mul(
             &self.public.paillier_pub,
@@ -112,13 +108,12 @@ impl ManagementSystem for MasterKey1 {
                 &self.private,
                 &f_l_new.to_big_int(),
             ),
-            chain_code: ChainCode1{chain_code:cc_new},
+            chain_code: ChainCode1 { chain_code: cc_new },
         }
     }
 }
 
 impl MasterKey1 {
-
     pub fn set_master_key(
         chain_code: &GE,
         party1_first_message: &party_one::KeyGenFirstMsg,
@@ -136,7 +131,9 @@ impl MasterKey1 {
         MasterKey1 {
             public: party1_public,
             private: part1_private,
-            chain_code: ChainCode1{chain_code: chain_code.clone()},
+            chain_code: ChainCode1 {
+                chain_code: chain_code.clone(),
+            },
         }
     }
 
@@ -191,22 +188,29 @@ impl MasterKey1 {
         party_one::PaillierKeyPair::pdl_second_stage(pdl, c_tag_tag, first_message, a, b, blindness)
     }
 
-
-    pub fn sign_first_message() -> party_one::EphKeyGenFirstMsg{
+    pub fn sign_first_message() -> party_one::EphKeyGenFirstMsg {
         party_one::EphKeyGenFirstMsg::create()
     }
 
-    pub fn sign_second_message(&self, party_two_sign_message: &SignMessage, eph_key_gen_first_message_party_two: &EphKeyGenFirstMsg,
-                               eph_key_gen_first_message_party_one: &party_one::EphKeyGenFirstMsg,
-    message : &BigInt) -> Result<party_one::Signature,Errors>{
-        let verify_party_two_second_message = party_one::EphKeyGenSecondMsg::verify_commitments_and_dlog_proof(
-            &eph_key_gen_first_message_party_two.pk_commitment,
-            &eph_key_gen_first_message_party_two.zk_pok_commitment,
-            &party_two_sign_message.second_message.zk_pok_blind_factor,
-            &party_two_sign_message.second_message.public_share,
-            &party_two_sign_message.second_message.pk_commitment_blind_factor,
-            &party_two_sign_message.second_message.d_log_proof,
-        ).is_ok();
+    pub fn sign_second_message(
+        &self,
+        party_two_sign_message: &SignMessage,
+        eph_key_gen_first_message_party_two: &EphKeyGenFirstMsg,
+        eph_key_gen_first_message_party_one: &party_one::EphKeyGenFirstMsg,
+        message: &BigInt,
+    ) -> Result<party_one::Signature, Errors> {
+        let verify_party_two_second_message =
+            party_one::EphKeyGenSecondMsg::verify_commitments_and_dlog_proof(
+                &eph_key_gen_first_message_party_two.pk_commitment,
+                &eph_key_gen_first_message_party_two.zk_pok_commitment,
+                &party_two_sign_message.second_message.zk_pok_blind_factor,
+                &party_two_sign_message.second_message.public_share,
+                &party_two_sign_message
+                    .second_message
+                    .pk_commitment_blind_factor,
+                &party_two_sign_message.second_message.d_log_proof,
+            )
+            .is_ok();
 
         let signature = party_one::Signature::compute(
             &self.private,
@@ -215,20 +219,13 @@ impl MasterKey1 {
             &eph_key_gen_first_message_party_two.public_share,
         );
 
-        let verify =  party_one::verify(&signature, &self.public.q, message).is_ok();
-        match verify{
-            true => {
-                match verify_party_two_second_message{
-                    true => Ok(signature),
-                    false => Err(SignError),
-                }
-
+        let verify = party_one::verify(&signature, &self.public.q, message).is_ok();
+        match verify {
+            true => match verify_party_two_second_message {
+                true => Ok(signature),
+                false => Err(SignError),
             },
             false => Err(SignError),
         }
     }
-
-
-
-
 }

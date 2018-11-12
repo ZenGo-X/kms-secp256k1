@@ -10,7 +10,6 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
-
 use cryptography_utils::FE;
 
 pub mod party1;

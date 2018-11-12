@@ -10,11 +10,11 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
+use chain_code::two_party::party1::ChainCode1;
+use chain_code::two_party::party2::ChainCode2;
 use cryptography_utils::{BigInt, GE};
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one, party_two};
 use paillier::*;
-use chain_code::two_party::party1::ChainCode1;
-use chain_code::two_party::party2::ChainCode2;
 
 #[derive(Serialize, Deserialize)]
 pub struct Party1Public {
