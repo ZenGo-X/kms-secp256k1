@@ -9,16 +9,15 @@
     version 3 of the License, or (at your option) any later version.
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
-use cryptography_utils::cryptographic_primitives::hashing::hmac_sha512;
 use cryptography_utils::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
 use cryptography_utils::elliptic::curves::traits::ECPoint;
 use cryptography_utils::elliptic::curves::traits::ECScalar;
 use cryptography_utils::{BigInt, FE, GE};
 use ManagementSystem;
 
+use super::hd_key;
 use super::{MasterKey1, Party1Public};
 use chain_code::two_party::party1::ChainCode1;
-use cryptography_utils::cryptographic_primitives::hashing::traits::KeyedHash;
 use ecdsa::two_party::party2::SignMessage;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::EphKeyGenFirstMsg;
@@ -54,38 +53,9 @@ impl ManagementSystem for MasterKey1 {
         }
     }
 
-    fn get_child(&self, mut location_in_hir: Vec<BigInt>) -> MasterKey1 {
-        let mask = BigInt::from(2).pow(256) - BigInt::one();
-        let public_key = self.public.q.clone();
-        let chain_code_bi = self.chain_code.chain_code.bytes_compressed_to_big_int();
-
-        // calc first element:
-        let first = location_in_hir.remove(0);
-        let pub_key_bi = public_key.bytes_compressed_to_big_int();
-        let f = hmac_sha512::HMacSha512::create_hmac(&chain_code_bi, &vec![&pub_key_bi, &first]);
-        let f_l = &f >> 256;
-        let f_r = &f & &mask;
-        let f_l_fe: FE = ECScalar::from(&f_l);
-        let f_r_fe: FE = ECScalar::from(&f_r);
-        let chain_code = &self.chain_code.chain_code * &f_r_fe;
-        let pub_key = public_key * &f_l_fe;
-
+    fn get_child(&self, location_in_hir: Vec<BigInt>) -> MasterKey1 {
         let (public_key_new_child, f_l_new, cc_new) =
-            location_in_hir
-                .iter()
-                .fold((pub_key, f_l_fe, chain_code), |acc, index| {
-                    let pub_key_bi = acc.0.bytes_compressed_to_big_int();
-                    let f = hmac_sha512::HMacSha512::create_hmac(
-                        &acc.2.bytes_compressed_to_big_int(),
-                        &vec![&pub_key_bi, index],
-                    );
-                    let f_l = &f >> 256;
-                    let f_r = &f & &mask;
-                    let f_l_fe: FE = ECScalar::from(&f_l);
-                    let f_r_fe: FE = ECScalar::from(&f_r);
-
-                    (acc.0 * &f_l_fe, f_l_fe * &acc.1, &acc.2 * &f_r_fe)
-                });
+            hd_key(location_in_hir, &self.public.q, &self.chain_code.chain_code);
 
         let c_key_new = Paillier::mul(
             &self.public.paillier_pub,
