@@ -1,4 +1,4 @@
-Key Management System (KMS) for curvr Secp256k1 
+Key Management System (KMS) for curve Secp256k1 
 =====================================
 Multi Party Key Management System (KMS) for Secp256k1 Elliptic curve based digital signatures.
  ### Currently supported features 
