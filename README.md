@@ -7,7 +7,7 @@ Multi Party Key Management System (KMS) for Secp256k1 Elliptic curve based digit
 * Key management trait (including implementation for Schnorr and ECDSA):
   * **two party rotation** of secret shares (no change to public key/address) 
   * **two party HD** (hirrachical deterministic) derivation for two party distributed keys
-* Third party recovery of counter master secret share (root of HD tree) with support of verifiable encryption (VE) == a way for counter party to verify that third party has the power the unlock for full private key.
+* Third party recovery of counter master secret share (root of HD tree) with support of verifiable encryption (VE) == a way for counter party to verify that third party has the ability to unlock for it to get the full private key.
 
 ### Currently not supported
 * The library does not provide serialize and desrialize functionalities and not handling any form of network communication
