@@ -179,8 +179,7 @@ impl MasterKey1 {
                     .second_message
                     .pk_commitment_blind_factor,
                 &party_two_sign_message.second_message.d_log_proof,
-            )
-            .is_ok();
+            ).is_ok();
 
         let signature = party_one::Signature::compute(
             &self.private,

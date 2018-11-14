@@ -14,6 +14,7 @@ use cryptography_utils::cryptographic_primitives::twoparty::dh_key_exchange;
 
 use cryptography_utils::GE;
 
+#[derive(Serialize, Deserialize)]
 pub struct ChainCode1 {
     pub chain_code: GE,
 }

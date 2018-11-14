@@ -23,6 +23,8 @@ use cryptography_utils::elliptic::curves::traits::ECPoint;
 use cryptography_utils::elliptic::curves::traits::ECScalar;
 use paillier::*;
 use rotation::two_party::Rotation;
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SignMessage {
     pub partial_sig: party_two::PartialSig,
     pub second_message: party_two::EphKeyGenSecondMsg,

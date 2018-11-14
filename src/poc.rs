@@ -57,15 +57,13 @@ mod tests {
                 &keygen_party2.first_message,
                 &keygen_party2_second_message,
                 &hash_e1.e,
-            )
-            .expect("bad key proof");
+            ).expect("bad key proof");
         let _pubkey_view_party2 = keygen_party2
             .third_message(
                 &keygen_party1.first_message,
                 &keygen_party1_second_message,
                 &hash_e2.e,
-            )
-            .expect("bad key proof");
+            ).expect("bad key proof");
 
         // full ecdsa key gen:
 
@@ -117,16 +115,14 @@ mod tests {
             &pdl_decom_party2.a,
             &pdl_decom_party2.b,
             &pdl_decom_party2.blindness,
-        )
-        .expect("pdl error party 2");
+        ).expect("pdl error party 2");
 
         EcdsaMasterKey2::key_gen_fourth_message(
             &pdl_chal,
             &pdl_decom_party1.blindness,
             &pdl_decom_party1.q_hat,
             &pdl_prover.c_hat,
-        )
-        .expect("pdl error party1");
+        ).expect("pdl error party1");
 
         // recovery:
         let secret_new = Msegmentation::assemble_fe(&segments.x_vec, &segment_size);

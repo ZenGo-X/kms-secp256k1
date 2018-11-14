@@ -70,16 +70,14 @@ mod tests {
             &pdl_decom_party2.a,
             &pdl_decom_party2.b,
             &pdl_decom_party2.blindness,
-        )
-        .expect("pdl error party 2");
+        ).expect("pdl error party 2");
 
         MasterKey2::key_gen_fourth_message(
             &pdl_chal,
             &pdl_decom_party1.blindness,
             &pdl_decom_party1.q_hat,
             &pdl_prover.c_hat,
-        )
-        .expect("pdl error party1");
+        ).expect("pdl error party1");
 
         // chain code
         let cc_party_one_first_message = party1::ChainCode1::chain_code_first_message();
@@ -264,16 +262,14 @@ mod tests {
             &pdl_decom_party2.a,
             &pdl_decom_party2.b,
             &pdl_decom_party2.blindness,
-        )
-        .expect("pdl error party 2");
+        ).expect("pdl error party 2");
 
         MasterKey2::key_gen_fourth_message(
             &pdl_chal,
             &pdl_decom_party1.blindness,
             &pdl_decom_party1.q_hat,
             &pdl_prover.c_hat,
-        )
-        .expect("pdl error party1");
+        ).expect("pdl error party1");
 
         // chain code
         let cc_party_one_first_message = party1::ChainCode1::chain_code_first_message();
@@ -409,16 +405,14 @@ mod tests {
             &pdl_decom_party2.a,
             &pdl_decom_party2.b,
             &pdl_decom_party2.blindness,
-        )
-        .expect("pdl error party 2");
+        ).expect("pdl error party 2");
 
         MasterKey2::key_gen_fourth_message(
             &pdl_chal,
             &pdl_decom_party1.blindness,
             &pdl_decom_party1.q_hat,
             &pdl_prover.c_hat,
-        )
-        .expect("pdl error party1");
+        ).expect("pdl error party1");
 
         // chain code
         let cc_party_one_first_message = party1::ChainCode1::chain_code_first_message();
@@ -562,16 +556,14 @@ mod tests {
             &pdl_decom_party2.a,
             &pdl_decom_party2.b,
             &pdl_decom_party2.blindness,
-        )
-        .expect("pdl error party 2");
+        ).expect("pdl error party 2");
 
         MasterKey2::key_gen_fourth_message(
             &pdl_chal,
             &pdl_decom_party1.blindness,
             &pdl_decom_party1.q_hat,
             &pdl_prover.c_hat,
-        )
-        .expect("pdl error party1");
+        ).expect("pdl error party1");
     }
 
 }

@@ -14,9 +14,11 @@ use cryptography_utils::cryptographic_primitives::proofs::ProofError;
 use cryptography_utils::cryptographic_primitives::twoparty::dh_key_exchange;
 use cryptography_utils::GE;
 
+#[derive(Serialize, Deserialize)]
 pub struct ChainCode2 {
     pub chain_code: GE,
 }
+
 impl ChainCode2 {
     pub fn chain_code_first_message() -> dh_key_exchange::Party2FirstMessage {
         dh_key_exchange::Party2FirstMessage::create()
