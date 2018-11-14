@@ -47,8 +47,7 @@ mod tests {
 
         //full schnorr key gen:
         let keygen_party1 = party1::KeyGen::first_message();
-        let keygen_party2 = party2::KeyGen::first_message_predefined(&ss);
-
+        let keygen_party2 = party2::KeyGen::first_message_predefined(ss.clone());
         let (hash_e1, keygen_party1_second_message) =
             keygen_party1.second_message(&keygen_party2.first_message);
         let (hash_e2, keygen_party2_second_message) =

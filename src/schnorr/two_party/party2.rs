@@ -103,7 +103,9 @@ impl MasterKey2 {
             eph_pub_key_vec,
             &BigInt::to_vec(message),
         );
-        let y2 = eph_sign.eph_key.partial_sign(&self.local_key_pair, &es);
+        let y2 = eph_sign
+            .eph_key
+            .partial_sign(&self.local_key_pair, es.clone());
         (SignHelper { es, Xt }, SignParty2Message2 { y2 })
     }
 
@@ -113,7 +115,7 @@ impl MasterKey2 {
         received_message2: &SignParty1Message2,
         sign_helper: &SignHelper,
     ) -> Result<Signature, Errors> {
-        let y = EphKey::add_signature_parts(&vec![
+        let y = EphKey::add_signature_parts(vec![
             received_message2.y1.clone(),
             party_two_sign_second_message.y2.clone(),
         ]);
@@ -126,10 +128,10 @@ impl MasterKey2 {
 }
 
 impl ManagementSystem for MasterKey2 {
-    fn rotate(self, cf: &Rotation) -> MasterKey2 {
-        let new_I = self.local_key_pair.update_key_pair(&cf.rotation);
+    fn rotate(mut self, cf: &Rotation) -> MasterKey2 {
+        self.local_key_pair.update_key_pair(cf.rotation.clone());
         MasterKey2 {
-            local_key_pair: new_I,
+            local_key_pair: self.local_key_pair,
             chain_code: ChainCode2 {
                 chain_code: self.chain_code.chain_code.clone(),
             },
@@ -140,11 +142,11 @@ impl ManagementSystem for MasterKey2 {
     fn get_child(&self, location_in_hir: Vec<BigInt>) -> MasterKey2 {
         let (public_key_new_child, _f_l_new, cc_new) =
             hd_key(location_in_hir, &self.pubkey, &self.chain_code.chain_code);
-
-        let new_I = self.local_key_pair.update_key_pair(&FE::zero());
+        let mut local_key_pair_updated = self.local_key_pair.clone();
+        local_key_pair_updated.update_key_pair(FE::zero());
 
         MasterKey2 {
-            local_key_pair: new_I,
+            local_key_pair: local_key_pair_updated,
             chain_code: ChainCode2 { chain_code: cc_new },
             pubkey: public_key_new_child,
         }
@@ -154,7 +156,7 @@ impl ManagementSystem for MasterKey2 {
 impl KeyGen {
     pub fn first_message() -> KeyGen {
         let keys_2 = Keys::create();
-        let broadcast1 = Keys::broadcast(&keys_2);
+        let broadcast1 = Keys::broadcast(keys_2.clone());
         KeyGen {
             local_keys: keys_2,
             first_message: KeyGenParty2Message1 { ix_pub: broadcast1 },
@@ -162,9 +164,9 @@ impl KeyGen {
     }
 
     // for predefined private key:
-    pub fn first_message_predefined(secret_share: &FE) -> KeyGen {
+    pub fn first_message_predefined(secret_share: FE) -> KeyGen {
         let keys_2 = Keys::create_from(secret_share);
-        let broadcast1 = Keys::broadcast(&keys_2);
+        let broadcast1 = Keys::broadcast(keys_2.clone());
         KeyGen {
             local_keys: keys_2,
             first_message: KeyGenParty2Message1 { ix_pub: broadcast1 },
@@ -181,7 +183,7 @@ impl KeyGen {
             self.first_message.ix_pub.clone(),
         ];
         let e = Keys::collect_and_compute_challenge(&ix_vec);
-        let y2 = partial_sign(&self.local_keys, &e);
+        let y2 = partial_sign(&self.local_keys, e.clone());
         (HashE { e }, KeyGenParty2Message2 { y2 })
     }
     // verify remote local sig and output joint public key if valid
