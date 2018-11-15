@@ -169,7 +169,9 @@ mod tests {
         );
         let sign_party_one_second_message = party_one_master_key.sign_second_message(
             &sign_party_two_second_message,
-            &sign_party_two_first_message,
+            &sign_party_two_first_message.pk_commitment,
+            &sign_party_two_first_message.zk_pok_commitment,
+            &sign_party_two_first_message.public_share,
             &sign_party_one_first_message,
             &message,
         );
@@ -187,7 +189,9 @@ mod tests {
         );
         let sign_party_one_second_message = new_party_one_master_key.sign_second_message(
             &sign_party_two_second_message,
-            &sign_party_two_first_message,
+            &sign_party_two_first_message.pk_commitment,
+            &sign_party_two_first_message.zk_pok_commitment,
+            &sign_party_two_first_message.public_share,
             &sign_party_one_first_message,
             &message,
         );
@@ -205,7 +209,9 @@ mod tests {
         );
         let sign_party_one_second_message = cr_party_one_master_key.sign_second_message(
             &sign_party_two_second_message,
-            &sign_party_two_first_message,
+            &sign_party_two_first_message.pk_commitment,
+            &sign_party_two_first_message.zk_pok_commitment,
+            &sign_party_two_first_message.public_share,
             &sign_party_one_first_message,
             &message,
         );
@@ -330,7 +336,9 @@ mod tests {
         );
         let sign_party_one_second_message = party_one_master_key.sign_second_message(
             &sign_party_two_second_message,
-            &sign_party_two_first_message,
+            &sign_party_two_first_message.pk_commitment,
+            &sign_party_two_first_message.zk_pok_commitment,
+            &sign_party_two_first_message.public_share,
             &sign_party_one_first_message,
             &message,
         );
@@ -348,7 +356,9 @@ mod tests {
         );
         let sign_party_one_second_message = new_party_one_master_key.sign_second_message(
             &sign_party_two_second_message,
-            &sign_party_two_first_message,
+            &sign_party_two_first_message.pk_commitment,
+            &sign_party_two_first_message.zk_pok_commitment,
+            &sign_party_two_first_message.public_share,
             &sign_party_one_first_message,
             &message,
         );
@@ -475,7 +485,9 @@ mod tests {
         );
         let sign_party_one_second_message = party_one_master_key.sign_second_message(
             &sign_party_two_second_message,
-            &sign_party_two_first_message,
+            &sign_party_two_first_message.pk_commitment,
+            &sign_party_two_first_message.zk_pok_commitment,
+            &sign_party_two_first_message.public_share,
             &sign_party_one_first_message,
             &message,
         );
@@ -499,7 +511,9 @@ mod tests {
         );
         let sign_party_one_second_message = party_one_master_key_rotated.sign_second_message(
             &sign_party_two_second_message,
-            &sign_party_two_first_message,
+            &sign_party_two_first_message.pk_commitment,
+            &sign_party_two_first_message.zk_pok_commitment,
+            &sign_party_two_first_message.public_share,
             &sign_party_one_first_message,
             &message,
         );

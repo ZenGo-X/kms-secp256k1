@@ -20,7 +20,6 @@ use super::{MasterKey1, Party1Public};
 use chain_code::two_party::party1::ChainCode1;
 use ecdsa::two_party::party2::SignMessage;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one;
-use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::EphKeyGenFirstMsg;
 use paillier::*;
 use rotation::two_party::Rotation;
 use Errors::{self, SignError};
@@ -165,14 +164,16 @@ impl MasterKey1 {
     pub fn sign_second_message(
         &self,
         party_two_sign_message: &SignMessage,
-        eph_key_gen_first_message_party_two: &EphKeyGenFirstMsg,
+        eph_key_gen_first_message_party_two_pk_commitment: &BigInt,
+        eph_key_gen_first_message_party_two_zk_pok_commitment: &BigInt,
+        eph_key_gen_first_message_party_two_public_share: &GE,
         eph_key_gen_first_message_party_one: &party_one::EphKeyGenFirstMsg,
         message: &BigInt,
     ) -> Result<party_one::Signature, Errors> {
         let verify_party_two_second_message =
             party_one::EphKeyGenSecondMsg::verify_commitments_and_dlog_proof(
-                &eph_key_gen_first_message_party_two.pk_commitment,
-                &eph_key_gen_first_message_party_two.zk_pok_commitment,
+                &eph_key_gen_first_message_party_two_pk_commitment,
+                &eph_key_gen_first_message_party_two_zk_pok_commitment,
                 &party_two_sign_message.second_message.zk_pok_blind_factor,
                 &party_two_sign_message.second_message.public_share,
                 &party_two_sign_message
@@ -185,7 +186,7 @@ impl MasterKey1 {
             &self.private,
             &party_two_sign_message.partial_sig.c3,
             &eph_key_gen_first_message_party_one,
-            &eph_key_gen_first_message_party_two.public_share,
+            &eph_key_gen_first_message_party_two_public_share,
         );
 
         let verify = party_one::verify(&signature, &self.public.q, message).is_ok();
