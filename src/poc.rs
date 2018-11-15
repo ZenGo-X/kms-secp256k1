@@ -57,18 +57,22 @@ mod tests {
                 &keygen_party2.first_message,
                 &keygen_party2_second_message,
                 &hash_e1.e,
-            ).expect("bad key proof");
+            )
+            .expect("bad key proof");
         let _pubkey_view_party2 = keygen_party2
             .third_message(
                 &keygen_party1.first_message,
                 &keygen_party1_second_message,
                 &hash_e2.e,
-            ).expect("bad key proof");
+            )
+            .expect("bad key proof");
 
         // full ecdsa key gen:
 
-        let kg_party_one_first_message = EcdsaMasterKey1::key_gen_first_message();
-        let kg_party_two_first_message = EcdsaMasterKey2::key_gen_first_message_predefined(&ss);
+        let (kg_party_one_first_message, kg_comm_witness, kg_ec_key_pair_party1) =
+            EcdsaMasterKey1::key_gen_first_message();
+        let (kg_party_two_first_message, _kg_ec_key_pair_party2) =
+            EcdsaMasterKey2::key_gen_first_message();
         let (
             kg_party_one_second_message,
             paillier_key_pair,
@@ -77,17 +81,14 @@ mod tests {
             rp_proof,
             correct_key_proof,
         ) = EcdsaMasterKey1::key_gen_second_message(
-            &kg_party_one_first_message,
+            kg_comm_witness,
+            &kg_ec_key_pair_party1,
             &kg_party_two_first_message.d_log_proof,
         );
 
         let key_gen_second_message = EcdsaMasterKey2::key_gen_second_message(
-            &kg_party_one_first_message.pk_commitment,
-            &kg_party_one_first_message.zk_pok_commitment,
-            &kg_party_one_second_message.zk_pok_blind_factor,
-            &kg_party_one_second_message.public_share,
-            &kg_party_one_second_message.pk_commitment_blind_factor,
-            &kg_party_one_second_message.d_log_proof,
+            &kg_party_one_first_message,
+            &kg_party_one_second_message,
             &paillier_key_pair.ek,
             &paillier_key_pair.encrypted_share,
             &rp_challenge,
@@ -111,18 +112,20 @@ mod tests {
         let pdl_decom_party1 = EcdsaMasterKey1::key_gen_fourth_message(
             &pdl_prover,
             &pdl_chal.c_tag_tag,
-            &kg_party_one_first_message,
+            kg_ec_key_pair_party1,
             &pdl_decom_party2.a,
             &pdl_decom_party2.b,
             &pdl_decom_party2.blindness,
-        ).expect("pdl error party 2");
+        )
+        .expect("pdl error party 2");
 
         EcdsaMasterKey2::key_gen_fourth_message(
             &pdl_chal,
             &pdl_decom_party1.blindness,
             &pdl_decom_party1.q_hat,
             &pdl_prover.c_hat,
-        ).expect("pdl error party1");
+        )
+        .expect("pdl error party1");
 
         // recovery:
         let secret_new = Msegmentation::assemble_fe(&segments.x_vec, &segment_size);

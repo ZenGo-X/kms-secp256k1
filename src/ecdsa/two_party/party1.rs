@@ -86,18 +86,18 @@ impl ManagementSystem for MasterKey1 {
 impl MasterKey1 {
     pub fn set_master_key(
         chain_code: &GE,
-        party1_first_message: &party_one::KeyGenFirstMsg,
+        ec_key_pair_party1: &party_one::EcKeyPair,
         party2_first_message_public_share: &GE,
         paillier_key_pair: &party_one::PaillierKeyPair,
     ) -> MasterKey1 {
         let party1_public = Party1Public {
-            q: party_one::compute_pubkey(party1_first_message, party2_first_message_public_share),
-            p1: party1_first_message.public_share.clone(),
+            q: party_one::compute_pubkey(ec_key_pair_party1, party2_first_message_public_share),
+            p1: ec_key_pair_party1.public_share.clone(),
             paillier_pub: paillier_key_pair.ek.clone(),
             c_key: paillier_key_pair.encrypted_share.clone(),
         };
         let part1_private =
-            party_one::Party1Private::set_private_key(&party1_first_message, &paillier_key_pair);
+            party_one::Party1Private::set_private_key(&ec_key_pair_party1, &paillier_key_pair);
         MasterKey1 {
             public: party1_public,
             private: part1_private,
@@ -107,11 +107,16 @@ impl MasterKey1 {
         }
     }
 
-    pub fn key_gen_first_message() -> party_one::KeyGenFirstMsg {
+    pub fn key_gen_first_message() -> (
+        party_one::KeyGenFirstMsg,
+        party_one::CommWitness,
+        party_one::EcKeyPair,
+    ) {
         party_one::KeyGenFirstMsg::create_commitments()
     }
     pub fn key_gen_second_message(
-        first_message: &party_one::KeyGenFirstMsg,
+        comm_witness: party_one::CommWitness,
+        ec_key_pair_party1: &party_one::EcKeyPair,
         proof: &DLogProof,
     ) -> (
         party_one::KeyGenSecondMsg,
@@ -122,12 +127,15 @@ impl MasterKey1 {
         NICorrectKeyProof,
     ) {
         let key_gen_second_message =
-            party_one::KeyGenSecondMsg::verify_and_decommit(&first_message, proof).expect("");
+            party_one::KeyGenSecondMsg::verify_and_decommit(comm_witness, proof).expect("");
 
         let paillier_key_pair =
-            party_one::PaillierKeyPair::generate_keypair_and_encrypted_share(first_message);
+            party_one::PaillierKeyPair::generate_keypair_and_encrypted_share(&ec_key_pair_party1);
         let (encrypted_pairs, challenge, range_proof) =
-            party_one::PaillierKeyPair::generate_range_proof(&paillier_key_pair, &first_message);
+            party_one::PaillierKeyPair::generate_range_proof(
+                &paillier_key_pair,
+                &ec_key_pair_party1,
+            );
         let correct_key_proof =
             party_one::PaillierKeyPair::generate_ni_proof_correct_key(&paillier_key_pair);
         (
@@ -150,15 +158,15 @@ impl MasterKey1 {
     pub fn key_gen_fourth_message(
         pdl: &party_one::PDL,
         c_tag_tag: &BigInt,
-        first_message: &party_one::KeyGenFirstMsg,
+        ec_key_pair: party_one::EcKeyPair,
         a: &BigInt,
         b: &BigInt,
         blindness: &BigInt,
     ) -> Result<(party_one::PDLdecommit), ()> {
-        party_one::PaillierKeyPair::pdl_second_stage(pdl, c_tag_tag, first_message, a, b, blindness)
+        party_one::PaillierKeyPair::pdl_second_stage(pdl, c_tag_tag, ec_key_pair, a, b, blindness)
     }
 
-    pub fn sign_first_message() -> party_one::EphKeyGenFirstMsg {
+    pub fn sign_first_message() -> (party_one::EphKeyGenFirstMsg, party_one::EphEcKeyPair) {
         party_one::EphKeyGenFirstMsg::create()
     }
 
@@ -166,26 +174,24 @@ impl MasterKey1 {
         &self,
         party_two_sign_message: &SignMessage,
         eph_key_gen_first_message_party_two: &EphKeyGenFirstMsg,
-        eph_key_gen_first_message_party_one: &party_one::EphKeyGenFirstMsg,
+        eph_ec_key_pair_party1: &party_one::EphEcKeyPair,
         message: &BigInt,
     ) -> Result<party_one::Signature, Errors> {
         let verify_party_two_second_message =
             party_one::EphKeyGenSecondMsg::verify_commitments_and_dlog_proof(
-                &eph_key_gen_first_message_party_two.pk_commitment,
-                &eph_key_gen_first_message_party_two.zk_pok_commitment,
-                &party_two_sign_message.second_message.zk_pok_blind_factor,
-                &party_two_sign_message.second_message.public_share,
-                &party_two_sign_message
-                    .second_message
-                    .pk_commitment_blind_factor,
-                &party_two_sign_message.second_message.d_log_proof,
-            ).is_ok();
+                &eph_key_gen_first_message_party_two,
+                &party_two_sign_message.second_message,
+            )
+            .is_ok();
 
         let signature = party_one::Signature::compute(
             &self.private,
             &party_two_sign_message.partial_sig.c3,
-            &eph_key_gen_first_message_party_one,
-            &eph_key_gen_first_message_party_two.public_share,
+            &eph_ec_key_pair_party1,
+            &party_two_sign_message
+                .second_message
+                .comm_witness
+                .public_share,
         );
 
         let verify = party_one::verify(&signature, &self.public.q, message).is_ok();

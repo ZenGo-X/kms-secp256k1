@@ -12,6 +12,8 @@
 use ManagementSystem;
 
 use cryptography_utils::{BigInt, FE, GE};
+use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one::KeyGenFirstMsg as Party1KeyGenFirstMsg;
+use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one::KeyGenSecondMsg as Party1KeyGenSecondMsg;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two;
 
 use super::hd_key;
@@ -92,17 +94,17 @@ impl ManagementSystem for MasterKey2 {
 impl MasterKey2 {
     pub fn set_master_key(
         chain_code: &GE,
-        party2_first_message: &party_two::KeyGenFirstMsg,
-        party1_first_message_public_chare: &GE,
+        ec_key_pair_party2: &party_two::EcKeyPair,
+        party1_second_message_public_share: &GE,
         paillier_public: &party_two::PaillierPublic,
     ) -> MasterKey2 {
         let party2_public = Party2Public {
-            q: party_two::compute_pubkey(party2_first_message, party1_first_message_public_chare),
-            p2: party2_first_message.public_share.clone(),
+            q: party_two::compute_pubkey(ec_key_pair_party2, party1_second_message_public_share),
+            p2: ec_key_pair_party2.public_share.clone(),
             paillier_pub: paillier_public.ek.clone(),
             c_key: paillier_public.encrypted_secret_share.clone(),
         };
-        let party2_private = party_two::Party2Private::set_private_key(&party2_first_message);
+        let party2_private = party_two::Party2Private::set_private_key(&ec_key_pair_party2);
         MasterKey2 {
             public: party2_public,
             private: party2_private,
@@ -111,22 +113,20 @@ impl MasterKey2 {
             },
         }
     }
-    pub fn key_gen_first_message() -> party_two::KeyGenFirstMsg {
+    pub fn key_gen_first_message() -> (party_two::KeyGenFirstMsg, party_two::EcKeyPair) {
         party_two::KeyGenFirstMsg::create()
     }
 
     // from predefined secret key
-    pub fn key_gen_first_message_predefined(secret_share: &FE) -> party_two::KeyGenFirstMsg {
+    pub fn key_gen_first_message_predefined(
+        secret_share: &FE,
+    ) -> (party_two::KeyGenFirstMsg, party_two::EcKeyPair) {
         party_two::KeyGenFirstMsg::create_with_fixed_secret_share(secret_share.clone())
     }
 
     pub fn key_gen_second_message(
-        party_one_first_message_pk_commitment: &BigInt,
-        party_one_first_message_zk_pok_commitment: &BigInt,
-        party_one_second_message_zk_pok_blind_factor: &BigInt,
-        party_one_second_message_public_share: &GE,
-        party_one_second_message_pk_commitment_blind_factor: &BigInt,
-        party_one_second_message_d_log_proof: &DLogProof,
+        party_one_first_message: &Party1KeyGenFirstMsg,
+        party_one_second_message: &Party1KeyGenSecondMsg,
         paillier_encryption_key: &EncryptionKey,
         paillier_encrypted_share: &BigInt,
         challenge: &ChallengeBits,
@@ -143,12 +143,8 @@ impl MasterKey2 {
     > {
         let party_two_second_message =
             party_two::KeyGenSecondMsg::verify_commitments_and_dlog_proof(
-                &party_one_first_message_pk_commitment,
-                &party_one_first_message_zk_pok_commitment,
-                &party_one_second_message_zk_pok_blind_factor,
-                &party_one_second_message_public_share,
-                &party_one_second_message_pk_commitment_blind_factor,
-                &party_one_second_message_d_log_proof,
+                &party_one_first_message,
+                &party_one_second_message,
             );
 
         let party_two_paillier = party_two::PaillierPublic {
@@ -163,7 +159,8 @@ impl MasterKey2 {
             &proof,
         );
 
-        let pdl_chal = party_two_paillier.pdl_challenge(party_one_second_message_public_share);
+        let pdl_chal =
+            party_two_paillier.pdl_challenge(&party_one_second_message.comm_witness.public_share);
 
         let correct_key_verify = correct_key_proof.verify(&party_two_paillier.ek);
 
@@ -190,25 +187,29 @@ impl MasterKey2 {
         party_two::PaillierPublic::verify_pdl(pdl_chal, blindness, q_hat, c_hat)
     }
 
-    pub fn sign_first_message() -> party_two::EphKeyGenFirstMsg {
+    pub fn sign_first_message() -> (
+        party_two::EphKeyGenFirstMsg,
+        party_two::EphCommWitness,
+        party_two::EphEcKeyPair,
+    ) {
         party_two::EphKeyGenFirstMsg::create_commitments()
     }
     pub fn sign_second_message(
         &self,
-        eph_first_message_party_two: &party_two::EphKeyGenFirstMsg,
+        ec_key_pair_party2: &party_two::EphEcKeyPair,
+        eph_comm_witness: party_two::EphCommWitness,
         eph_first_message_public_share_party_one: &GE,
         proof: &DLogProof,
         message: &BigInt,
     ) -> SignMessage {
         let eph_key_gen_second_message =
-            party_two::EphKeyGenSecondMsg::verify_and_decommit(eph_first_message_party_two, proof)
-                .expect("");
+            party_two::EphKeyGenSecondMsg::verify_and_decommit(eph_comm_witness, proof).expect("");
 
         let partial_sig = party_two::PartialSig::compute(
             &self.public.paillier_pub,
             &self.public.c_key,
             &self.private,
-            &eph_first_message_party_two,
+            &ec_key_pair_party2,
             eph_first_message_public_share_party_one,
             message,
         );

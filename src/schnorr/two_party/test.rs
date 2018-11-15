@@ -40,13 +40,15 @@ mod tests {
                 &keygen_party2.first_message,
                 &keygen_party2_second_message,
                 &hash_e1.e,
-            ).expect("bad key proof");
+            )
+            .expect("bad key proof");
         let pubkey_view_party2 = keygen_party2
             .third_message(
                 &keygen_party1.first_message,
                 &keygen_party1_second_message,
                 &hash_e2.e,
-            ).expect("bad key proof");
+            )
+            .expect("bad key proof");
 
         assert_eq!(
             pubkey_view_party1.get_element(),
@@ -125,13 +127,15 @@ mod tests {
                 &sign_party1_message2,
                 &sign_party2_message2,
                 &sign_helper_party1,
-            ).expect("bad signing");
+            )
+            .expect("bad signing");
         let _signature_view_party2 = rc_party_two_master_key
             .signature(
                 &sign_party2_message2,
                 &sign_party1_message2,
                 &sign_helper_party2,
-            ).expect("bad signing");
+            )
+            .expect("bad signing");
 
         // set master keys:
         let party_one_master_key =
@@ -168,13 +172,15 @@ mod tests {
                 &sign_party1_message2,
                 &sign_party2_message2,
                 &sign_helper_party1,
-            ).expect("bad signing");
+            )
+            .expect("bad signing");
         let _signature_view_party2 = cr_party_two_master_key
             .signature(
                 &sign_party2_message2,
                 &sign_party1_message2,
                 &sign_helper_party2,
-            ).expect("bad signing");
+            )
+            .expect("bad signing");
 
         // test rotate -> child pub key == child -> rotate pub key
         assert_eq!(
@@ -196,13 +202,15 @@ mod tests {
                 &keygen_party2.first_message,
                 &keygen_party2_second_message,
                 &hash_e1.e,
-            ).expect("bad key proof");
+            )
+            .expect("bad key proof");
         let pubkey_view_party2 = keygen_party2
             .third_message(
                 &keygen_party1.first_message,
                 &keygen_party1_second_message,
                 &hash_e2.e,
-            ).expect("bad key proof");
+            )
+            .expect("bad key proof");
 
         assert_eq!(
             pubkey_view_party1.get_element(),
@@ -258,13 +266,15 @@ mod tests {
                 &sign_party1_message2,
                 &sign_party2_message2,
                 &sign_helper_party1,
-            ).expect("bad signing");
+            )
+            .expect("bad signing");
         let _signature_view_party2 = party_two_master_key
             .signature(
                 &sign_party2_message2,
                 &sign_party1_message2,
                 &sign_helper_party2,
-            ).expect("bad signing");
+            )
+            .expect("bad signing");
 
         //get child:
 
@@ -298,13 +308,15 @@ mod tests {
                 &sign_party1_message2,
                 &sign_party2_message2,
                 &sign_helper_party1,
-            ).expect("bad signing");
+            )
+            .expect("bad signing");
         let _signature_view_party2 = new_party_two_master_key
             .signature(
                 &sign_party2_message2,
                 &sign_party1_message2,
                 &sign_helper_party2,
-            ).expect("bad signing");
+            )
+            .expect("bad signing");
     }
     #[test]
     fn test_flip_masters() {
@@ -320,13 +332,15 @@ mod tests {
                 &keygen_party2.first_message,
                 &keygen_party2_second_message,
                 &hash_e1.e,
-            ).expect("bad key proof");
+            )
+            .expect("bad key proof");
         let pubkey_view_party2 = keygen_party2
             .third_message(
                 &keygen_party1.first_message,
                 &keygen_party1_second_message,
                 &hash_e2.e,
-            ).expect("bad key proof");
+            )
+            .expect("bad key proof");
 
         assert_eq!(
             pubkey_view_party1.get_element(),
@@ -393,13 +407,15 @@ mod tests {
                 &sign_party1_message2,
                 &sign_party2_message2,
                 &sign_helper_party1,
-            ).expect("bad signing");
+            )
+            .expect("bad signing");
         let _signature_view_party2 = party_two_master_key
             .signature(
                 &sign_party2_message2,
                 &sign_party1_message2,
                 &sign_helper_party2,
-            ).expect("bad signing");
+            )
+            .expect("bad signing");
 
         //rotate:
 
@@ -428,13 +444,15 @@ mod tests {
                 &sign_party1_message2,
                 &sign_party2_message2,
                 &sign_helper_party1,
-            ).expect("bad signing");
+            )
+            .expect("bad signing");
         let _signature_view_party2 = party_two_master_key_rotated
             .signature(
                 &sign_party2_message2,
                 &sign_party1_message2,
                 &sign_helper_party2,
-            ).expect("bad signing");
+            )
+            .expect("bad signing");
     }
 
     #[test]
@@ -451,13 +469,15 @@ mod tests {
                 &keygen_party2.first_message,
                 &keygen_party2_second_message,
                 &hash_e1.e,
-            ).expect("bad key proof");
+            )
+            .expect("bad key proof");
         let pubkey_view_party2 = keygen_party2
             .third_message(
                 &keygen_party1.first_message,
                 &keygen_party1_second_message,
                 &hash_e2.e,
-            ).expect("bad key proof");
+            )
+            .expect("bad key proof");
 
         assert_eq!(
             pubkey_view_party1.get_element(),
