@@ -11,7 +11,7 @@
 */
 
 use cryptography_utils::cryptographic_primitives::proofs::ProofError;
-use cryptography_utils::cryptographic_primitives::twoparty::dh_key_exchange;
+use cryptography_utils::cryptographic_primitives::twoparty::dh_key_exchange::*;
 use cryptography_utils::GE;
 
 #[derive(Serialize, Deserialize)]
@@ -20,33 +20,26 @@ pub struct ChainCode2 {
 }
 
 impl ChainCode2 {
-    pub fn chain_code_first_message() -> dh_key_exchange::Party2FirstMessage {
-        dh_key_exchange::Party2FirstMessage::create()
+    pub fn chain_code_first_message() -> (Party2FirstMessage, EcKeyPair) {
+        Party2FirstMessage::create()
     }
 
     pub fn chain_code_second_message(
-        party_one_first_message: &dh_key_exchange::Party1FirstMessage,
-        party_one_second_message: &dh_key_exchange::Party1SecondMessage,
-    ) -> Result<dh_key_exchange::Party2SecondMessage, ProofError> {
-        dh_key_exchange::Party2SecondMessage::verify_commitments_and_dlog_proof(
-            &party_one_first_message.pk_commitment,
-            &party_one_first_message.zk_pok_commitment,
-            &party_one_second_message.zk_pok_blind_factor,
-            &party_one_second_message.public_share,
-            &party_one_second_message.pk_commitment_blind_factor,
-            &party_one_second_message.d_log_proof,
+        party_one_first_message: &Party1FirstMessage,
+        party_one_second_message: &Party1SecondMessage,
+    ) -> Result<Party2SecondMessage, ProofError> {
+        Party2SecondMessage::verify_commitments_and_dlog_proof(
+            &party_one_first_message,
+            &party_one_second_message,
         )
     }
 
     pub fn compute_chain_code(
-        first_message_public_share: &GE,
-        party2_first_message: &dh_key_exchange::Party2FirstMessage,
+        ec_key_pair: &EcKeyPair,
+        party1_second_message_public_share: &GE,
     ) -> ChainCode2 {
         ChainCode2 {
-            chain_code: dh_key_exchange::compute_pubkey_party2(
-                party2_first_message,
-                first_message_public_share,
-            ),
+            chain_code: compute_pubkey(ec_key_pair, party1_second_message_public_share),
         }
     }
 }

@@ -10,7 +10,7 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 use cryptography_utils::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
-use cryptography_utils::cryptographic_primitives::twoparty::dh_key_exchange;
+use cryptography_utils::cryptographic_primitives::twoparty::dh_key_exchange::*;
 
 use cryptography_utils::GE;
 
@@ -20,24 +20,21 @@ pub struct ChainCode1 {
 }
 
 impl ChainCode1 {
-    pub fn chain_code_first_message() -> dh_key_exchange::Party1FirstMessage {
-        dh_key_exchange::Party1FirstMessage::create_commitments()
+    pub fn chain_code_first_message() -> (Party1FirstMessage, CommWitness, EcKeyPair) {
+        Party1FirstMessage::create_commitments()
     }
     pub fn chain_code_second_message(
-        first_message: &dh_key_exchange::Party1FirstMessage,
+        comm_witness: CommWitness,
         proof: &DLogProof,
-    ) -> dh_key_exchange::Party1SecondMessage {
-        dh_key_exchange::Party1SecondMessage::verify_and_decommit(&first_message, proof).expect("")
+    ) -> Party1SecondMessage {
+        Party1SecondMessage::verify_and_decommit(comm_witness, proof).expect("")
     }
     pub fn compute_chain_code(
-        first_message: &dh_key_exchange::Party1FirstMessage,
+        ec_key_pair: &EcKeyPair,
         party2_first_message_public_share: &GE,
     ) -> ChainCode1 {
         ChainCode1 {
-            chain_code: dh_key_exchange::compute_pubkey_party1(
-                first_message,
-                party2_first_message_public_share,
-            ),
+            chain_code: compute_pubkey(ec_key_pair, party2_first_message_public_share),
         }
     }
 }
