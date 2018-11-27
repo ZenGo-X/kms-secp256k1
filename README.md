@@ -1,6 +1,14 @@
 Key Management System (KMS) for curve Secp256k1 
 =====================================
 Multi Party Key Management System (KMS) for Secp256k1 Elliptic curve based digital signatures.
+
+ ### Introduction 
+
+Digital Signature Algorithm (DSA) is the basic cryptographic primitive for blockchain interaction: private keys represent identities, transfer of ownership is done by means of signatures and the blockchain is maintained by miners verifying signatures using public keys.
+Moving the classical DSA constructions to threshold signature schemes can provide enhanced security by distributed key generation and distributed signing. The miners verification process stays the same such that the change is transparent to the blockchain operators and can be done at the wallet (KMS) level. Recent years have brought major breakthroughs for threshold and multi-signatures schemes providing practical multi-party schemes for common DSAs used in blockchain today, i.e. [1–4] for ECDSA, Schnorr and BLS.
+
+We define two roles: Owner and Provider. The Owner is the end-user who owns the funds in the account and holds one secret share of the private key. The Provider is another share holder of the private key but has no funds tied to this private key. His role is to provide the additional security in the system aiding and enabling the owner to generate keys and transact in distributed fash- ion. From network perspective one Provider is connected to many Owners which together maintain the Provider, for example paying his cost in transaction fees. The Provider can run on any machine: from a Trusted Execution Environment (TEE) to machine operated by incentivized human operator. Multiple Providers can compete for Owners. To give concrete example for use case: a company employees are all Owners and a Server owned by the company is the Provider.
+
  ### Currently supported features 
 * Messaging wrapper for **Schnorr two party** key generation and signing (https://github.com/KZen-networks/multi-party-schnorr/tree/master/src/protocols/multisig)
 * Messaging wrapper for **ECDSA two party** key generation and signing (https://github.com/KZen-networks/multi-party-ecdsa/tree/master/src/protocols/two_party_ecdsa)
@@ -32,3 +40,15 @@ The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md), in
 Contact
 -------------------
 For any questions, feel free to [email us](mailto:github@kzencorp.com).
+
+
+References
+-------
+[1] R. Gennaro, S. Goldfeder. Fast Multiparty Threshold ECDSA with Fast Trustless Setup ACM Conference on Computer and Communications Security (CCS), 2018.
+
+[2] Y. Lindell and A. Nof. Fast Secure Multiparty ECDSA with Practical Distributed Key Generation and Applications to Cryptocurrency Custody. ACM Conference on Computer and Communications Security (CCS), 2018.
+
+[3] D. Boneh, M. Drijvers, G. Neven. Compact Multi-Signatures for Smaller Blockchains. Cryptology ePrint Archive, Report 2018/483. Last access Aug. 2018.
+
+[4] G. Maxwell, A. Poelstra, Y. Seurin, P. Wuille. Simple Schnorr Multi-Signatures with Applications to Bitcoin. Cryptology ePrint Archive, Report 2018/068, Last accessed Aug. 2018.
+
