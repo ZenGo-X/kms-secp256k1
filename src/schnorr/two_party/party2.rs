@@ -17,9 +17,9 @@
 use super::hd_key;
 use super::MasterKey2;
 use chain_code::two_party::party2::ChainCode2;
-use cryptography_utils::arithmetic::traits::Converter;
-use cryptography_utils::elliptic::curves::traits::ECScalar;
-use cryptography_utils::{BigInt, FE, GE};
+use curv::arithmetic::traits::Converter;
+use curv::elliptic::curves::traits::ECScalar;
+use curv::{BigInt, FE, GE};
 use multi_party_schnorr::protocols::multisig::*;
 use rotation::two_party::Rotation;
 use schnorr::two_party::party1::{

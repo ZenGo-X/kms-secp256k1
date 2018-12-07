@@ -10,9 +10,9 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
-use cryptography_utils::cryptographic_primitives::proofs::ProofError;
-use cryptography_utils::cryptographic_primitives::twoparty::dh_key_exchange::*;
-use cryptography_utils::GE;
+use curv::cryptographic_primitives::proofs::ProofError;
+use curv::cryptographic_primitives::twoparty::dh_key_exchange::*;
+use curv::GE;
 
 #[derive(Serialize, Deserialize)]
 pub struct ChainCode2 {

@@ -9,8 +9,8 @@
     version 3 of the License, or (at your option) any later version.
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
-use cryptography_utils::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
-use cryptography_utils::elliptic::curves::secp256_k1::Secp256k1Scalar;
+use curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
+use curv::elliptic::curves::secp256_k1::Secp256k1Scalar;
 
 use super::Rotation;
 

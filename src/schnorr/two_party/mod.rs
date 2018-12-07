@@ -16,10 +16,10 @@
 
 use chain_code::two_party::party1::ChainCode1;
 use chain_code::two_party::party2::ChainCode2;
-use cryptography_utils::cryptographic_primitives::hashing::hmac_sha512;
-use cryptography_utils::cryptographic_primitives::hashing::traits::KeyedHash;
-use cryptography_utils::elliptic::curves::traits::{ECPoint, ECScalar};
-use cryptography_utils::{BigInt, FE, GE};
+use curv::cryptographic_primitives::hashing::hmac_sha512;
+use curv::cryptographic_primitives::hashing::traits::KeyedHash;
+use curv::elliptic::curves::traits::{ECPoint, ECScalar};
+use curv::{BigInt, FE, GE};
 use multi_party_schnorr::protocols::multisig::KeyPair;
 // since this special case requires two out of two signers we ignore the "accountable" property
 

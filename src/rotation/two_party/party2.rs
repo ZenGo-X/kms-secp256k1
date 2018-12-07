@@ -10,7 +10,7 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
-use cryptography_utils::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
+use curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 
 use super::Rotation;
 

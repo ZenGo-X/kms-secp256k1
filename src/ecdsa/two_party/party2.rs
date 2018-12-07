@@ -11,18 +11,20 @@
 */
 use ManagementSystem;
 
-use cryptography_utils::{BigInt, FE, GE};
+use curv::{BigInt, FE, GE};
+use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one::EphKeyGenFirstMsg as Party1EphKeyGenFirstMsg;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one::KeyGenFirstMsg as Party1KeyGenFirstMsg;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one::KeyGenSecondMsg as Party1KeyGenSecondMsg;
+
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two;
 
 use super::hd_key;
 use super::{MasterKey2, Party2Public};
 use chain_code::two_party::party2::ChainCode2;
-use cryptography_utils::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
-use cryptography_utils::cryptographic_primitives::proofs::ProofError;
-use cryptography_utils::elliptic::curves::traits::ECPoint;
-use cryptography_utils::elliptic::curves::traits::ECScalar;
+use curv::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
+use curv::cryptographic_primitives::proofs::ProofError;
+use curv::elliptic::curves::traits::ECPoint;
+use curv::elliptic::curves::traits::ECScalar;
 use paillier::*;
 use rotation::two_party::Rotation;
 
@@ -198,19 +200,21 @@ impl MasterKey2 {
         &self,
         ec_key_pair_party2: &party_two::EphEcKeyPair,
         eph_comm_witness: party_two::EphCommWitness,
-        eph_first_message_public_share_party_one: &GE,
-        proof: &DLogProof,
+        eph_party1_first_message: &Party1EphKeyGenFirstMsg,
         message: &BigInt,
     ) -> SignMessage {
-        let eph_key_gen_second_message =
-            party_two::EphKeyGenSecondMsg::verify_and_decommit(eph_comm_witness, proof).expect("");
+        let eph_key_gen_second_message = party_two::EphKeyGenSecondMsg::verify_and_decommit(
+            eph_comm_witness,
+            eph_party1_first_message,
+        )
+        .expect("");
 
         let partial_sig = party_two::PartialSig::compute(
             &self.public.paillier_pub,
             &self.public.c_key,
             &self.private,
             &ec_key_pair_party2,
-            eph_first_message_public_share_party_one,
+            &eph_party1_first_message.public_share,
             message,
         );
         SignMessage {

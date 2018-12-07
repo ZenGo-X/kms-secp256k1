@@ -15,7 +15,7 @@ mod tests {
     use super::super::{MasterKey1, MasterKey2};
     use chain_code::two_party::party1;
     use chain_code::two_party::party2;
-    use cryptography_utils::BigInt;
+    use curv::BigInt;
     use rotation::two_party::party1::Rotation1;
     use rotation::two_party::party2::Rotation2;
     use ManagementSystem;
@@ -169,8 +169,7 @@ mod tests {
         let sign_party_two_second_message = party_two_master_key.sign_second_message(
             &eph_ec_key_pair_party2,
             eph_comm_witness.clone(),
-            &sign_party_one_first_message.public_share,
-            &sign_party_one_first_message.d_log_proof,
+            &sign_party_one_first_message,
             &message,
         );
         let sign_party_one_second_message = party_one_master_key.sign_second_message(
@@ -188,8 +187,7 @@ mod tests {
         let sign_party_two_second_message = new_party_two_master_key.sign_second_message(
             &eph_ec_key_pair_party2,
             eph_comm_witness.clone(),
-            &sign_party_one_first_message.public_share,
-            &sign_party_one_first_message.d_log_proof,
+            &sign_party_one_first_message,
             &message,
         );
         let sign_party_one_second_message = new_party_one_master_key.sign_second_message(
@@ -207,8 +205,7 @@ mod tests {
         let sign_party_two_second_message = cr_party_two_master_key.sign_second_message(
             &eph_ec_key_pair_party2,
             eph_comm_witness,
-            &sign_party_one_first_message.public_share,
-            &sign_party_one_first_message.d_log_proof,
+            &sign_party_one_first_message,
             &message,
         );
         let sign_party_one_second_message = cr_party_one_master_key.sign_second_message(
@@ -339,8 +336,7 @@ mod tests {
         let sign_party_two_second_message = party_two_master_key.sign_second_message(
             &eph_ec_key_pair_party2,
             eph_comm_witness,
-            &sign_party_one_first_message.public_share,
-            &sign_party_one_first_message.d_log_proof,
+            &sign_party_one_first_message,
             &message,
         );
         let sign_party_one_second_message = party_one_master_key.sign_second_message(
@@ -360,8 +356,7 @@ mod tests {
         let sign_party_two_second_message = new_party_two_master_key.sign_second_message(
             &eph_ec_key_pair_party2,
             eph_comm_witness,
-            &sign_party_one_first_message.public_share,
-            &sign_party_one_first_message.d_log_proof,
+            &sign_party_one_first_message,
             &message,
         );
         let sign_party_one_second_message = new_party_one_master_key.sign_second_message(
@@ -494,8 +489,7 @@ mod tests {
         let sign_party_two_second_message = party_two_master_key.sign_second_message(
             &eph_ec_key_pair_party2,
             eph_comm_witness,
-            &sign_party_one_first_message.public_share,
-            &sign_party_one_first_message.d_log_proof,
+            &sign_party_one_first_message,
             &message,
         );
         let sign_party_one_second_message = party_one_master_key.sign_second_message(
@@ -521,8 +515,7 @@ mod tests {
         let sign_party_two_second_message = party_two_master_key_rotated.sign_second_message(
             &eph_ec_key_pair_party2,
             eph_comm_witness,
-            &sign_party_one_first_message.public_share,
-            &sign_party_one_first_message.d_log_proof,
+            &sign_party_one_first_message,
             &message,
         );
         let sign_party_one_second_message = party_one_master_key_rotated.sign_second_message(

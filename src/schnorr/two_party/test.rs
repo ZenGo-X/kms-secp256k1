@@ -19,8 +19,8 @@ mod tests {
     use super::super::{MasterKey1, MasterKey2};
     use chain_code::two_party::party1::ChainCode1;
     use chain_code::two_party::party2::ChainCode2;
-    use cryptography_utils::elliptic::curves::traits::ECPoint;
-    use cryptography_utils::BigInt;
+    use curv::elliptic::curves::traits::ECPoint;
+    use curv::BigInt;
     use rotation::two_party::party1::Rotation1;
     use rotation::two_party::party2::Rotation2;
     use schnorr::two_party::{party1, party2};

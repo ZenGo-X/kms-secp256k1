@@ -9,10 +9,10 @@
     version 3 of the License, or (at your option) any later version.
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
-use cryptography_utils::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
-use cryptography_utils::elliptic::curves::traits::ECPoint;
-use cryptography_utils::elliptic::curves::traits::ECScalar;
-use cryptography_utils::{BigInt, FE, GE};
+use curv::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
+use curv::elliptic::curves::traits::ECPoint;
+use curv::elliptic::curves::traits::ECScalar;
+use curv::{BigInt, FE, GE};
 use ManagementSystem;
 
 use super::hd_key;

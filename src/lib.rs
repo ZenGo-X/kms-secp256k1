@@ -18,7 +18,7 @@ extern crate serde_derive;
 extern crate serde;
 
 extern crate centipede;
-extern crate cryptography_utils;
+extern crate curv;
 extern crate multi_party_ecdsa;
 extern crate multi_party_schnorr;
 extern crate paillier;

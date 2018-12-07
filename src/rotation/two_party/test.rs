@@ -16,7 +16,7 @@
 
 #[cfg(test)]
 mod tests {
-    use cryptography_utils::elliptic::curves::traits::ECScalar;
+    use curv::elliptic::curves::traits::ECScalar;
     use rotation::two_party::party1::Rotation1;
     use rotation::two_party::party2::Rotation2;
 

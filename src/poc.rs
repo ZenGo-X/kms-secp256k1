@@ -20,8 +20,8 @@
 mod tests {
     use centipede::juggling::proof_system::Proof;
     use centipede::juggling::segmentation::Msegmentation;
-    use cryptography_utils::elliptic::curves::traits::{ECPoint, ECScalar};
-    use cryptography_utils::{FE, GE};
+    use curv::elliptic::curves::traits::{ECPoint, ECScalar};
+    use curv::{FE, GE};
     use ecdsa::two_party::MasterKey1 as EcdsaMasterKey1;
     use ecdsa::two_party::MasterKey2 as EcdsaMasterKey2;
     use schnorr::two_party::party1;
