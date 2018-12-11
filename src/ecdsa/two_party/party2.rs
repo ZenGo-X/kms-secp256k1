@@ -21,12 +21,12 @@ use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two;
 use super::hd_key;
 use super::{MasterKey2, Party2Public};
 use chain_code::two_party::party2::ChainCode2;
-use curv::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
 use curv::cryptographic_primitives::proofs::ProofError;
 use curv::elliptic::curves::traits::ECPoint;
 use curv::elliptic::curves::traits::ECScalar;
-use paillier::*;
+use paillier::{EncryptionKey, Mul, Paillier, RawCiphertext, RawPlaintext};
 use rotation::two_party::Rotation;
+use zk_paillier::zkproofs::{NICorrectKeyProof, RangeProofNi};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SignMessage {
@@ -131,9 +131,7 @@ impl MasterKey2 {
         party_one_second_message: &Party1KeyGenSecondMsg,
         paillier_encryption_key: &EncryptionKey,
         paillier_encrypted_share: &BigInt,
-        challenge: &ChallengeBits,
-        encrypted_pairs: &EncryptedPairs,
-        proof: &Proof,
+        range_proof: &RangeProofNi,
         correct_key_proof: &NICorrectKeyProof,
     ) -> Result<
         (
@@ -154,12 +152,8 @@ impl MasterKey2 {
             encrypted_secret_share: paillier_encrypted_share.clone(),
         };
 
-        let range_proof = party_two::PaillierPublic::verify_range_proof(
-            &party_two_paillier,
-            &challenge,
-            &encrypted_pairs,
-            &proof,
-        );
+        let range_proof =
+            party_two::PaillierPublic::verify_range_proof(&party_two_paillier, &range_proof);
 
         let pdl_chal =
             party_two_paillier.pdl_challenge(&party_one_second_message.comm_witness.public_share);

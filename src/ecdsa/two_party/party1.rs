@@ -21,8 +21,9 @@ use chain_code::two_party::party1::ChainCode1;
 use ecdsa::two_party::party2::SignMessage;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::EphKeyGenFirstMsg;
-use paillier::*;
+use paillier::{Mul, Paillier, RawCiphertext, RawPlaintext};
 use rotation::two_party::Rotation;
+use zk_paillier::zkproofs::{NICorrectKeyProof, RangeProofNi};
 use Errors::{self, SignError};
 
 impl ManagementSystem for MasterKey1 {
@@ -121,9 +122,7 @@ impl MasterKey1 {
     ) -> (
         party_one::KeyGenSecondMsg,
         party_one::PaillierKeyPair,
-        EncryptedPairs,
-        ChallengeBits,
-        Proof,
+        RangeProofNi,
         NICorrectKeyProof,
     ) {
         let key_gen_second_message =
@@ -131,18 +130,15 @@ impl MasterKey1 {
 
         let paillier_key_pair =
             party_one::PaillierKeyPair::generate_keypair_and_encrypted_share(&ec_key_pair_party1);
-        let (encrypted_pairs, challenge, range_proof) =
-            party_one::PaillierKeyPair::generate_range_proof(
-                &paillier_key_pair,
-                &ec_key_pair_party1,
-            );
+        let range_proof = party_one::PaillierKeyPair::generate_range_proof(
+            &paillier_key_pair,
+            &ec_key_pair_party1,
+        );
         let correct_key_proof =
             party_one::PaillierKeyPair::generate_ni_proof_correct_key(&paillier_key_pair);
         (
             key_gen_second_message,
             paillier_key_pair,
-            encrypted_pairs,
-            challenge,
             range_proof,
             correct_key_proof,
         )

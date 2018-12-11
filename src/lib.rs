@@ -22,6 +22,7 @@ extern crate curv;
 extern crate multi_party_ecdsa;
 extern crate multi_party_schnorr;
 extern crate paillier;
+extern crate zk_paillier;
 
 pub mod chain_code;
 pub mod ecdsa;

@@ -27,27 +27,19 @@ mod tests {
             MasterKey1::key_gen_first_message();
         let (kg_party_two_first_message, kg_ec_key_pair_party2) =
             MasterKey2::key_gen_first_message();
-        let (
-            kg_party_one_second_message,
-            paillier_key_pair,
-            rp_encrypted_pairs,
-            rp_challenge,
-            rp_proof,
-            correct_key_proof,
-        ) = MasterKey1::key_gen_second_message(
-            kg_comm_witness,
-            &kg_ec_key_pair_party1,
-            &kg_party_two_first_message.d_log_proof,
-        );
+        let (kg_party_one_second_message, paillier_key_pair, range_proof, correct_key_proof) =
+            MasterKey1::key_gen_second_message(
+                kg_comm_witness,
+                &kg_ec_key_pair_party1,
+                &kg_party_two_first_message.d_log_proof,
+            );
 
         let key_gen_second_message = MasterKey2::key_gen_second_message(
             &kg_party_one_first_message,
             &kg_party_one_second_message,
             &paillier_key_pair.ek,
             &paillier_key_pair.encrypted_share,
-            &rp_challenge,
-            &rp_encrypted_pairs,
-            &rp_proof,
+            &range_proof,
             &correct_key_proof,
         );
 
@@ -225,27 +217,19 @@ mod tests {
             MasterKey1::key_gen_first_message();
         let (kg_party_two_first_message, kg_ec_key_pair_party2) =
             MasterKey2::key_gen_first_message();
-        let (
-            kg_party_one_second_message,
-            paillier_key_pair,
-            rp_encrypted_pairs,
-            rp_challenge,
-            rp_proof,
-            correct_key_proof,
-        ) = MasterKey1::key_gen_second_message(
-            kg_comm_witness,
-            &kg_ec_key_pair_party1,
-            &kg_party_two_first_message.d_log_proof,
-        );
+        let (kg_party_one_second_message, paillier_key_pair, range_proof, correct_key_proof) =
+            MasterKey1::key_gen_second_message(
+                kg_comm_witness,
+                &kg_ec_key_pair_party1,
+                &kg_party_two_first_message.d_log_proof,
+            );
 
         let key_gen_second_message = MasterKey2::key_gen_second_message(
             &kg_party_one_first_message,
             &kg_party_one_second_message,
             &paillier_key_pair.ek,
             &paillier_key_pair.encrypted_share,
-            &rp_challenge,
-            &rp_encrypted_pairs,
-            &rp_proof,
+            &range_proof,
             &correct_key_proof,
         );
 
@@ -376,27 +360,19 @@ mod tests {
             MasterKey1::key_gen_first_message();
         let (kg_party_two_first_message, kg_ec_key_pair_party2) =
             MasterKey2::key_gen_first_message();
-        let (
-            kg_party_one_second_message,
-            paillier_key_pair,
-            rp_encrypted_pairs,
-            rp_challenge,
-            rp_proof,
-            correct_key_proof,
-        ) = MasterKey1::key_gen_second_message(
-            kg_comm_witness,
-            &kg_ec_key_pair_party1,
-            &kg_party_two_first_message.d_log_proof,
-        );
+        let (kg_party_one_second_message, paillier_key_pair, range_proof, correct_key_proof) =
+            MasterKey1::key_gen_second_message(
+                kg_comm_witness,
+                &kg_ec_key_pair_party1,
+                &kg_party_two_first_message.d_log_proof,
+            );
 
         let key_gen_second_message = MasterKey2::key_gen_second_message(
             &kg_party_one_first_message,
             &kg_party_one_second_message,
             &paillier_key_pair.ek,
             &paillier_key_pair.encrypted_share,
-            &rp_challenge,
-            &rp_encrypted_pairs,
-            &rp_proof,
+            &range_proof,
             &correct_key_proof,
         );
 
@@ -534,27 +510,19 @@ mod tests {
             MasterKey1::key_gen_first_message();
         let (kg_party_two_first_message, _kg_ec_key_pair_party2) =
             MasterKey2::key_gen_first_message();
-        let (
-            kg_party_one_second_message,
-            paillier_key_pair,
-            rp_encrypted_pairs,
-            rp_challenge,
-            rp_proof,
-            correct_key_proof,
-        ) = MasterKey1::key_gen_second_message(
-            kg_comm_witness,
-            &kg_ec_key_pair_party1,
-            &kg_party_two_first_message.d_log_proof,
-        );
+        let (kg_party_one_second_message, paillier_key_pair, range_proof, correct_key_proof) =
+            MasterKey1::key_gen_second_message(
+                kg_comm_witness,
+                &kg_ec_key_pair_party1,
+                &kg_party_two_first_message.d_log_proof,
+            );
 
         let key_gen_second_message = MasterKey2::key_gen_second_message(
             &kg_party_one_first_message,
             &kg_party_one_second_message,
             &paillier_key_pair.ek,
             &paillier_key_pair.encrypted_share,
-            &rp_challenge,
-            &rp_encrypted_pairs,
-            &rp_proof,
+            &range_proof,
             &correct_key_proof,
         );
 
