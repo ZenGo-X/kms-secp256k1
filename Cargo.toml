@@ -17,7 +17,9 @@ serde_derive = "1.0"
 
 [dependencies.paillier]
 git = "https://github.com/mortendahl/rust-paillier"
-branch = "new_correct_key"
+
+[dependencies.zk-paillier]
+git = "https://github.com/KZen-networks/zk-paillier"
 
 [dependencies.multi-party-schnorr]
 git = "https://github.com/KZen-networks/multi-party-schnorr"

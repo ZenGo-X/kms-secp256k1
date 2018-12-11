@@ -11,6 +11,7 @@
 */
 use curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use curv::elliptic::curves::secp256_k1::Secp256k1Scalar;
+use zk_paillier::zkproofs::NISigmaProof;
 
 use super::Rotation;
 
