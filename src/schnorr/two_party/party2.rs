@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 /*
-    KMS-ECDSA
+    KMS-secp256k1
 
     Copyright 2018 by Kzen Networks
 
@@ -25,7 +25,7 @@ use rotation::two_party::Rotation;
 use schnorr::two_party::party1::{
     KeyGenParty1Message1, KeyGenParty1Message2, SignParty1Message1, SignParty1Message2,
 };
-use ManagementSystem;
+use ManagementSystem2PSchnorr;
 
 use Errors::{self, KeyGenError, SignError};
 
@@ -127,7 +127,7 @@ impl MasterKey2 {
     }
 }
 
-impl ManagementSystem for MasterKey2 {
+impl ManagementSystem2PSchnorr for MasterKey2 {
     fn rotate(mut self, cf: &Rotation) -> MasterKey2 {
         self.local_key_pair.update_key_pair(cf.rotation.clone());
         MasterKey2 {

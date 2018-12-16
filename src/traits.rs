@@ -17,7 +17,7 @@
 use curv::BigInt;
 use rotation::two_party::Rotation;
 
-pub trait ManagementSystem {
+pub trait ManagementSystem2PSchnorr {
     fn rotate(self, &Rotation) -> Self;
     fn get_child(&self, Vec<BigInt>) -> Self;
 }

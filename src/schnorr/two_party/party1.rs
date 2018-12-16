@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 /*
-    KMS-ECDSA
+    KMS-secp256k1
 
     Copyright 2018 by Kzen Networks
 
@@ -26,7 +26,7 @@ use schnorr::two_party::party2::{
     KeyGenParty2Message1, KeyGenParty2Message2, SignParty2Message1, SignParty2Message2,
 };
 
-use ManagementSystem;
+use ManagementSystem2PSchnorr;
 
 use Errors::{self, KeyGenError, SignError};
 
@@ -129,7 +129,7 @@ impl MasterKey1 {
     }
 }
 
-impl ManagementSystem for MasterKey1 {
+impl ManagementSystem2PSchnorr for MasterKey1 {
     fn rotate(mut self, cf: &Rotation) -> MasterKey1 {
         let zero: FE = FE::zero();
         let minus_cf = zero.sub(&cf.rotation.get_element());

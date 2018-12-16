@@ -69,11 +69,12 @@ mod tests {
 
         // full ecdsa key gen:
 
+        // key gen
         let (kg_party_one_first_message, kg_comm_witness, kg_ec_key_pair_party1) =
             EcdsaMasterKey1::key_gen_first_message();
         let (kg_party_two_first_message, _kg_ec_key_pair_party2) =
             EcdsaMasterKey2::key_gen_first_message();
-        let (kg_party_one_second_message, paillier_key_pair, range_proof, correct_key_proof) =
+        let (kg_party_one_second_message, _paillier_key_pair, party_one_private) =
             EcdsaMasterKey1::key_gen_second_message(
                 kg_comm_witness,
                 &kg_ec_key_pair_party1,
@@ -83,42 +84,36 @@ mod tests {
         let key_gen_second_message = EcdsaMasterKey2::key_gen_second_message(
             &kg_party_one_first_message,
             &kg_party_one_second_message,
-            &paillier_key_pair.ek,
-            &paillier_key_pair.encrypted_share,
-            &range_proof,
-            &correct_key_proof,
         );
 
         assert!(key_gen_second_message.is_ok());
 
-        let (party_two_second_message, _party_two_paillier, pdl_chal) =
+        let (party_two_second_message, _party_two_paillier, party_two_pdl_chal) =
             key_gen_second_message.unwrap();
 
-        assert!(party_two_second_message.is_ok());
+        let (party_one_third_message, party_one_pdl_commit) =
+            EcdsaMasterKey1::key_gen_third_message(
+                &party_two_second_message.pdl_first_message,
+                &party_one_private,
+            );
 
-        let pdl_prover =
-            EcdsaMasterKey1::key_gen_third_message(&paillier_key_pair, &pdl_chal.c_tag);
+        let party_two_third_message = EcdsaMasterKey2::key_gen_third_message(&party_two_pdl_chal);
 
-        let pdl_decom_party2 = EcdsaMasterKey2::key_gen_third_message(&pdl_chal);
-
-        let pdl_decom_party1 = EcdsaMasterKey1::key_gen_fourth_message(
-            &pdl_prover,
-            &pdl_chal.c_tag_tag,
-            kg_ec_key_pair_party1,
-            &pdl_decom_party2.a,
-            &pdl_decom_party2.b,
-            &pdl_decom_party2.blindness,
+        let party_one_fourth_message = EcdsaMasterKey1::key_gen_fourth_message(
+            &party_one_third_message,
+            &party_two_second_message.pdl_first_message,
+            &party_two_third_message,
+            party_one_private,
+            party_one_pdl_commit,
         )
         .expect("pdl error party 2");
 
         EcdsaMasterKey2::key_gen_fourth_message(
-            &pdl_chal,
-            &pdl_decom_party1.blindness,
-            &pdl_decom_party1.q_hat,
-            &pdl_prover.c_hat,
+            &party_two_pdl_chal,
+            &party_one_third_message,
+            &party_one_fourth_message,
         )
         .expect("pdl error party1");
-
         // recovery:
         let secret_new = Msegmentation::assemble_fe(&segments.x_vec, &segment_size);
         let secret_decrypted = Msegmentation::decrypt(&encryptions, &G, &y, &segment_size);

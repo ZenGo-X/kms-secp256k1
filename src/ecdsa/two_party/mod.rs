@@ -23,6 +23,7 @@ use paillier::*;
 pub struct Party1Public {
     pub q: GE,
     pub p1: GE,
+    pub p2: GE,
     pub paillier_pub: EncryptionKey,
     pub c_key: BigInt,
 }
@@ -38,6 +39,7 @@ pub struct MasterKey1 {
 pub struct Party2Public {
     pub q: GE,
     pub p2: GE,
+    pub p1: GE,
     pub paillier_pub: EncryptionKey,
     pub c_key: BigInt,
 }

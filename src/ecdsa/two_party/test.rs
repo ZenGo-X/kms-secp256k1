@@ -18,140 +18,13 @@ mod tests {
     use curv::BigInt;
     use rotation::two_party::party1::Rotation1;
     use rotation::two_party::party2::Rotation2;
-    use ManagementSystem;
 
     #[test]
     fn test_commutativity_rotate_get_child() {
         // key gen
-        let (kg_party_one_first_message, kg_comm_witness, kg_ec_key_pair_party1) =
-            MasterKey1::key_gen_first_message();
-        let (kg_party_two_first_message, kg_ec_key_pair_party2) =
-            MasterKey2::key_gen_first_message();
-        let (kg_party_one_second_message, paillier_key_pair, range_proof, correct_key_proof) =
-            MasterKey1::key_gen_second_message(
-                kg_comm_witness,
-                &kg_ec_key_pair_party1,
-                &kg_party_two_first_message.d_log_proof,
-            );
+        let (party_one_master_key, party_two_master_key) = test_key_gen();
 
-        let key_gen_second_message = MasterKey2::key_gen_second_message(
-            &kg_party_one_first_message,
-            &kg_party_one_second_message,
-            &paillier_key_pair.ek,
-            &paillier_key_pair.encrypted_share,
-            &range_proof,
-            &correct_key_proof,
-        );
-
-        assert!(key_gen_second_message.is_ok());
-
-        let (party_two_second_message, party_two_paillier, pdl_chal) =
-            key_gen_second_message.unwrap();
-
-        assert!(party_two_second_message.is_ok());
-
-        let pdl_prover = MasterKey1::key_gen_third_message(&paillier_key_pair, &pdl_chal.c_tag);
-
-        let pdl_decom_party2 = MasterKey2::key_gen_third_message(&pdl_chal);
-
-        let pdl_decom_party1 = MasterKey1::key_gen_fourth_message(
-            &pdl_prover,
-            &pdl_chal.c_tag_tag,
-            kg_ec_key_pair_party1.clone(),
-            &pdl_decom_party2.a,
-            &pdl_decom_party2.b,
-            &pdl_decom_party2.blindness,
-        )
-        .expect("pdl error party 2");
-
-        MasterKey2::key_gen_fourth_message(
-            &pdl_chal,
-            &pdl_decom_party1.blindness,
-            &pdl_decom_party1.q_hat,
-            &pdl_prover.c_hat,
-        )
-        .expect("pdl error party1");
-
-        // chain code
-        let (cc_party_one_first_message, cc_comm_witness, cc_ec_key_pair1) =
-            party1::ChainCode1::chain_code_first_message();
-        let (cc_party_two_first_message, cc_ec_key_pair2) =
-            party2::ChainCode2::chain_code_first_message();
-        let cc_party_one_second_message = party1::ChainCode1::chain_code_second_message(
-            cc_comm_witness,
-            &cc_party_two_first_message.d_log_proof,
-        );
-
-        let cc_party_two_second_message = party2::ChainCode2::chain_code_second_message(
-            &cc_party_one_first_message,
-            &cc_party_one_second_message,
-        );
-        assert!(cc_party_two_second_message.is_ok());
-
-        let party1_cc = party1::ChainCode1::compute_chain_code(
-            &cc_ec_key_pair1,
-            &cc_party_two_first_message.public_share,
-        );
-
-        let party2_cc = party2::ChainCode2::compute_chain_code(
-            &cc_ec_key_pair2,
-            &cc_party_one_second_message.comm_witness.public_share,
-        );
-
-        // rotate and then child:
-        //coin flip:
-        let (party1_first_message, m1, r1) = Rotation1::key_rotate_first_message();
-        let party2_first_message = Rotation2::key_rotate_first_message(&party1_first_message);
-        let (party1_second_message, random1) =
-            Rotation1::key_rotate_second_message(&party2_first_message, &m1, &r1);
-        let random2 = Rotation2::key_rotate_second_message(
-            &party1_second_message,
-            &party2_first_message,
-            &party1_first_message,
-        );
-
-        // set master keys:
-        let party_one_master_key = MasterKey1::set_master_key(
-            &party1_cc.chain_code,
-            &kg_ec_key_pair_party1,
-            &kg_party_two_first_message.public_share,
-            &paillier_key_pair,
-        );
-
-        let party_two_master_key = MasterKey2::set_master_key(
-            &party2_cc.chain_code,
-            &kg_ec_key_pair_party2,
-            &kg_party_one_second_message.comm_witness.public_share,
-            &party_two_paillier,
-        );
-
-        let party_one_master_key_rotated = party_one_master_key.rotate(&random1);
-        let party_two_master_key_rotated = party_two_master_key.rotate(&random2);
-        let rc_party_one_master_key =
-            party_one_master_key_rotated.get_child(vec![BigInt::from(10)]);
-        let rc_party_two_master_key =
-            party_two_master_key_rotated.get_child(vec![BigInt::from(10)]);
-        assert_eq!(
-            rc_party_one_master_key.chain_code.chain_code,
-            rc_party_two_master_key.chain_code.chain_code
-        );
-
-        // child and then rotate:
-        // set master keys:
-        let party_one_master_key = MasterKey1::set_master_key(
-            &party1_cc.chain_code,
-            &kg_ec_key_pair_party1,
-            &kg_party_two_first_message.public_share,
-            &paillier_key_pair,
-        );
-
-        let party_two_master_key = MasterKey2::set_master_key(
-            &party2_cc.chain_code,
-            &kg_ec_key_pair_party2,
-            &kg_party_one_second_message.comm_witness.public_share,
-            &party_two_paillier,
-        );
-
+        // child and rotate:
         //test signing:
         let message = BigInt::from(1234);
         let (sign_party_two_first_message, eph_comm_witness, eph_ec_key_pair_party2) =
@@ -190,8 +63,54 @@ mod tests {
         );
         sign_party_one_second_message.expect("bad signature");
 
-        let cr_party_one_master_key = new_party_one_master_key.rotate(&random1);
-        let cr_party_two_master_key = new_party_two_master_key.rotate(&random2);
+        //coin flip:
+        let (party1_first_message, m1, r1) = Rotation1::key_rotate_first_message();
+        let party2_first_message = Rotation2::key_rotate_first_message(&party1_first_message);
+        let (party1_second_message, random1) =
+            Rotation1::key_rotate_second_message(&party2_first_message, &m1, &r1);
+        let random2 = Rotation2::key_rotate_second_message(
+            &party1_second_message,
+            &party2_first_message,
+            &party1_first_message,
+        );
+        //rotation:
+        let (rotation_party_one_first_message, party_one_private_new) =
+            new_party_one_master_key.rotation_first_message(&random1);
+        let result_rotate_party_one_first_message = new_party_two_master_key
+            .rotate_first_message(&random2, &rotation_party_one_first_message);
+        assert!(result_rotate_party_one_first_message.is_ok());
+
+        let (rotation_party_two_first_message, party_two_pdl_chal, party_two_paillier) =
+            result_rotate_party_one_first_message.unwrap();
+        let (rotation_party_one_second_message, party_one_pdl_decommit) =
+            MasterKey1::rotation_second_message(
+                &rotation_party_two_first_message,
+                &party_one_private_new,
+            );
+        let rotation_party_two_second_message =
+            MasterKey2::rotate_second_message(&party_two_pdl_chal);
+        let result_rotate_party_two_second_message = new_party_one_master_key
+            .rotation_third_message(
+                &rotation_party_one_first_message,
+                party_one_private_new,
+                &random1,
+                &rotation_party_one_second_message,
+                &rotation_party_two_first_message,
+                &rotation_party_two_second_message,
+                party_one_pdl_decommit,
+            );
+        assert!(result_rotate_party_two_second_message.is_ok());
+        let (rotation_party_one_third_message, cr_party_one_master_key) =
+            result_rotate_party_two_second_message.unwrap();
+        let result_rotate_party_one_third_message = new_party_two_master_key.rotate_third_message(
+            &random2,
+            &party_two_paillier,
+            &party_two_pdl_chal,
+            &rotation_party_one_second_message,
+            &rotation_party_one_third_message,
+        );
+        assert!(result_rotate_party_one_third_message.is_ok());
+        let cr_party_two_master_key = result_rotate_party_one_third_message.unwrap();
 
         // sign with child and rotated keys
         let sign_party_two_second_message = cr_party_two_master_key.sign_second_message(
@@ -207,100 +126,81 @@ mod tests {
             &message,
         );
         sign_party_one_second_message.expect("bad signature");
+
+        // rotate_and_get_child:
+
+        //rotation:
+        let (rotation_party_one_first_message, party_one_private_new) =
+            party_one_master_key.rotation_first_message(&random1);
+        let result_rotate_party_one_first_message =
+            party_two_master_key.rotate_first_message(&random2, &rotation_party_one_first_message);
+        assert!(result_rotate_party_one_first_message.is_ok());
+
+        let (rotation_party_two_first_message, party_two_pdl_chal, party_two_paillier) =
+            result_rotate_party_one_first_message.unwrap();
+        let (rotation_party_one_second_message, party_one_pdl_decommit) =
+            MasterKey1::rotation_second_message(
+                &rotation_party_two_first_message,
+                &party_one_private_new,
+            );
+        let rotation_party_two_second_message =
+            MasterKey2::rotate_second_message(&party_two_pdl_chal);
+        let result_rotate_party_two_second_message = party_one_master_key.rotation_third_message(
+            &rotation_party_one_first_message,
+            party_one_private_new,
+            &random1,
+            &rotation_party_one_second_message,
+            &rotation_party_two_first_message,
+            &rotation_party_two_second_message,
+            party_one_pdl_decommit,
+        );
+        assert!(result_rotate_party_two_second_message.is_ok());
+        let (rotation_party_one_third_message, rotate_party_one_master_key) =
+            result_rotate_party_two_second_message.unwrap();
+        let result_rotate_party_one_third_message = party_two_master_key.rotate_third_message(
+            &random2,
+            &party_two_paillier,
+            &party_two_pdl_chal,
+            &rotation_party_one_second_message,
+            &rotation_party_one_third_message,
+        );
+        assert!(result_rotate_party_one_third_message.is_ok());
+        let rotate_party_two_master_key = result_rotate_party_one_third_message.unwrap();
+
+        //get child:
+        let rc_party_one_master_key = rotate_party_one_master_key.get_child(vec![BigInt::from(10)]);
+        let rc_party_two_master_key = rotate_party_two_master_key.get_child(vec![BigInt::from(10)]);
+
+        // sign with rotated and child keys
+        let message = BigInt::from(1234);
+        let (sign_party_two_first_message, eph_comm_witness, eph_ec_key_pair_party2) =
+            MasterKey2::sign_first_message();
+        let (sign_party_one_first_message, eph_ec_key_pair_party1) =
+            MasterKey1::sign_first_message();
+
+        let sign_party_two_second_message = rc_party_two_master_key.sign_second_message(
+            &eph_ec_key_pair_party2,
+            eph_comm_witness,
+            &sign_party_one_first_message,
+            &message,
+        );
+        let sign_party_one_second_message = rc_party_one_master_key.sign_second_message(
+            &sign_party_two_second_message,
+            &sign_party_two_first_message,
+            &eph_ec_key_pair_party1,
+            &message,
+        );
+        sign_party_one_second_message.expect("bad signature");
+        assert_eq!(
+            rc_party_one_master_key.public.q,
+            cr_party_one_master_key.public.q
+        );
     }
 
     #[test]
     fn test_get_child() {
         // compute master keys:
-        // key gen
-        let (kg_party_one_first_message, kg_comm_witness, kg_ec_key_pair_party1) =
-            MasterKey1::key_gen_first_message();
-        let (kg_party_two_first_message, kg_ec_key_pair_party2) =
-            MasterKey2::key_gen_first_message();
-        let (kg_party_one_second_message, paillier_key_pair, range_proof, correct_key_proof) =
-            MasterKey1::key_gen_second_message(
-                kg_comm_witness,
-                &kg_ec_key_pair_party1,
-                &kg_party_two_first_message.d_log_proof,
-            );
-
-        let key_gen_second_message = MasterKey2::key_gen_second_message(
-            &kg_party_one_first_message,
-            &kg_party_one_second_message,
-            &paillier_key_pair.ek,
-            &paillier_key_pair.encrypted_share,
-            &range_proof,
-            &correct_key_proof,
-        );
-
-        assert!(key_gen_second_message.is_ok());
-
-        let (party_two_second_message, party_two_paillier, pdl_chal) =
-            key_gen_second_message.unwrap();
-
-        assert!(party_two_second_message.is_ok());
-
-        let pdl_prover = MasterKey1::key_gen_third_message(&paillier_key_pair, &pdl_chal.c_tag);
-
-        let pdl_decom_party2 = MasterKey2::key_gen_third_message(&pdl_chal);
-
-        let pdl_decom_party1 = MasterKey1::key_gen_fourth_message(
-            &pdl_prover,
-            &pdl_chal.c_tag_tag,
-            kg_ec_key_pair_party1.clone(),
-            &pdl_decom_party2.a,
-            &pdl_decom_party2.b,
-            &pdl_decom_party2.blindness,
-        )
-        .expect("pdl error party 2");
-
-        MasterKey2::key_gen_fourth_message(
-            &pdl_chal,
-            &pdl_decom_party1.blindness,
-            &pdl_decom_party1.q_hat,
-            &pdl_prover.c_hat,
-        )
-        .expect("pdl error party1");
-
-        // chain code
-        let (cc_party_one_first_message, cc_comm_witness, cc_ec_key_pair1) =
-            party1::ChainCode1::chain_code_first_message();
-        let (cc_party_two_first_message, cc_ec_key_pair2) =
-            party2::ChainCode2::chain_code_first_message();
-        let cc_party_one_second_message = party1::ChainCode1::chain_code_second_message(
-            cc_comm_witness,
-            &cc_party_two_first_message.d_log_proof,
-        );
-
-        let cc_party_two_second_message = party2::ChainCode2::chain_code_second_message(
-            &cc_party_one_first_message,
-            &cc_party_one_second_message,
-        );
-        assert!(cc_party_two_second_message.is_ok());
-
-        let party1_cc = party1::ChainCode1::compute_chain_code(
-            &cc_ec_key_pair1,
-            &cc_party_two_first_message.public_share,
-        );
-
-        let party2_cc = party2::ChainCode2::compute_chain_code(
-            &cc_ec_key_pair2,
-            &cc_party_one_second_message.comm_witness.public_share,
-        );
-
-        let party_one_master_key = MasterKey1::set_master_key(
-            &party1_cc.chain_code,
-            &kg_ec_key_pair_party1,
-            &kg_party_two_first_message.public_share,
-            &paillier_key_pair,
-        );
-
-        let party_two_master_key = MasterKey2::set_master_key(
-            &party2_cc.chain_code,
-            &kg_ec_key_pair_party2,
-            &kg_party_one_second_message.comm_witness.public_share,
-            &party_two_paillier,
-        );
+        let (party_one_master_key, party_two_master_key) = test_key_gen();
 
         let new_party_two_master_key =
             party_two_master_key.get_child(vec![BigInt::from(10), BigInt::from(5)]);
@@ -356,13 +256,112 @@ mod tests {
     fn test_flip_masters() {
         // for this test to work party2 MasterKey private need to be changed to pub
         // key gen
+        let (party_one_master_key, party_two_master_key) = test_key_gen();
+
+        //signing & verifying before rotation:
+        //test signing:
+        let message = BigInt::from(1234);
+        let (sign_party_two_first_message, eph_comm_witness, eph_ec_key_pair_party2) =
+            MasterKey2::sign_first_message();
+        let (sign_party_one_first_message, eph_ec_key_pair_party1) =
+            MasterKey1::sign_first_message();
+        let sign_party_two_second_message = party_two_master_key.sign_second_message(
+            &eph_ec_key_pair_party2,
+            eph_comm_witness,
+            &sign_party_one_first_message,
+            &message,
+        );
+        let sign_party_one_second_message = party_one_master_key.sign_second_message(
+            &sign_party_two_second_message,
+            &sign_party_two_first_message,
+            &eph_ec_key_pair_party1,
+            &message,
+        );
+        sign_party_one_second_message.expect("bad signature");
+
+        //coin flip:
+        let (party1_first_message, m1, r1) = Rotation1::key_rotate_first_message();
+        let party2_first_message = Rotation2::key_rotate_first_message(&party1_first_message);
+        let (party1_second_message, random1) =
+            Rotation1::key_rotate_second_message(&party2_first_message, &m1, &r1);
+        let random2 = Rotation2::key_rotate_second_message(
+            &party1_second_message,
+            &party2_first_message,
+            &party1_first_message,
+        );
+
+        //rotation:
+        let (rotation_party_one_first_message, party_one_private_new) =
+            party_one_master_key.rotation_first_message(&random1);
+
+        let result_rotate_party_one_first_message =
+            party_two_master_key.rotate_first_message(&random2, &rotation_party_one_first_message);
+        assert!(result_rotate_party_one_first_message.is_ok());
+
+        let (rotation_party_two_first_message, party_two_pdl_chal, party_two_paillier) =
+            result_rotate_party_one_first_message.unwrap();
+        let (rotation_party_one_second_message, party_one_pdl_decommit) =
+            MasterKey1::rotation_second_message(
+                &rotation_party_two_first_message,
+                &party_one_private_new,
+            );
+        let rotation_party_two_second_message =
+            MasterKey2::rotate_second_message(&party_two_pdl_chal);
+        let result_rotate_party_two_second_message = party_one_master_key.rotation_third_message(
+            &rotation_party_one_first_message,
+            party_one_private_new,
+            &random1,
+            &rotation_party_one_second_message,
+            &rotation_party_two_first_message,
+            &rotation_party_two_second_message,
+            party_one_pdl_decommit,
+        );
+        assert!(result_rotate_party_two_second_message.is_ok());
+        let (rotation_party_one_third_message, party_one_master_key_rotated) =
+            result_rotate_party_two_second_message.unwrap();
+
+        let result_rotate_party_one_third_message = party_two_master_key.rotate_third_message(
+            &random2,
+            &party_two_paillier,
+            &party_two_pdl_chal,
+            &rotation_party_one_second_message,
+            &rotation_party_one_third_message,
+        );
+        assert!(result_rotate_party_one_third_message.is_ok());
+
+        let party_two_master_key_rotated = result_rotate_party_one_third_message.unwrap();
+
+        // sign after rotate:
+        //test signing:
+        let message = BigInt::from(1234);
+        let (sign_party_two_first_message, eph_comm_witness, eph_ec_key_pair_party2) =
+            MasterKey2::sign_first_message();
+        let (sign_party_one_first_message, eph_ec_key_pair_party1) =
+            MasterKey1::sign_first_message();
+        let sign_party_two_second_message = party_two_master_key_rotated.sign_second_message(
+            &eph_ec_key_pair_party2,
+            eph_comm_witness,
+            &sign_party_one_first_message,
+            &message,
+        );
+        let sign_party_one_second_message = party_one_master_key_rotated.sign_second_message(
+            &sign_party_two_second_message,
+            &sign_party_two_first_message,
+            &eph_ec_key_pair_party1,
+            &message,
+        );
+        sign_party_one_second_message.expect("bad signature");
+    }
+
+    pub fn test_key_gen() -> (MasterKey1, MasterKey2) {
+        // key gen
         let (kg_party_one_first_message, kg_comm_witness, kg_ec_key_pair_party1) =
             MasterKey1::key_gen_first_message();
         let (kg_party_two_first_message, kg_ec_key_pair_party2) =
             MasterKey2::key_gen_first_message();
-        let (kg_party_one_second_message, paillier_key_pair, range_proof, correct_key_proof) =
+        let (kg_party_one_second_message, party_one_paillier_key_pair, party_one_private) =
             MasterKey1::key_gen_second_message(
-                kg_comm_witness,
+                kg_comm_witness.clone(),
                 &kg_ec_key_pair_party1,
                 &kg_party_two_first_message.d_log_proof,
             );
@@ -370,38 +369,33 @@ mod tests {
         let key_gen_second_message = MasterKey2::key_gen_second_message(
             &kg_party_one_first_message,
             &kg_party_one_second_message,
-            &paillier_key_pair.ek,
-            &paillier_key_pair.encrypted_share,
-            &range_proof,
-            &correct_key_proof,
         );
 
         assert!(key_gen_second_message.is_ok());
 
-        let (party_two_second_message, party_two_paillier, pdl_chal) =
+        let (party_two_second_message, party_two_paillier, party_two_pdl_chal) =
             key_gen_second_message.unwrap();
 
-        assert!(party_two_second_message.is_ok());
+        let (party_one_third_message, party_one_pdl_decommit) = MasterKey1::key_gen_third_message(
+            &party_two_second_message.pdl_first_message,
+            &party_one_private,
+        );
 
-        let pdl_prover = MasterKey1::key_gen_third_message(&paillier_key_pair, &pdl_chal.c_tag);
+        let party_two_third_message = MasterKey2::key_gen_third_message(&party_two_pdl_chal);
 
-        let pdl_decom_party2 = MasterKey2::key_gen_third_message(&pdl_chal);
-
-        let pdl_decom_party1 = MasterKey1::key_gen_fourth_message(
-            &pdl_prover,
-            &pdl_chal.c_tag_tag,
-            kg_ec_key_pair_party1.clone(),
-            &pdl_decom_party2.a,
-            &pdl_decom_party2.b,
-            &pdl_decom_party2.blindness,
+        let party_one_fourth_message = MasterKey1::key_gen_fourth_message(
+            &party_one_third_message,
+            &party_two_second_message.pdl_first_message,
+            &party_two_third_message,
+            party_one_private.clone(),
+            party_one_pdl_decommit,
         )
         .expect("pdl error party 2");
 
         MasterKey2::key_gen_fourth_message(
-            &pdl_chal,
-            &pdl_decom_party1.blindness,
-            &pdl_decom_party1.q_hat,
-            &pdl_prover.c_hat,
+            &party_two_pdl_chal,
+            &party_one_third_message,
+            &party_one_fourth_message,
         )
         .expect("pdl error party1");
 
@@ -433,126 +427,21 @@ mod tests {
         // set master keys:
         let party_one_master_key = MasterKey1::set_master_key(
             &party1_cc.chain_code,
-            &kg_ec_key_pair_party1,
+            party_one_private,
+            &kg_comm_witness.public_share,
             &kg_party_two_first_message.public_share,
-            &paillier_key_pair,
+            party_one_paillier_key_pair,
         );
 
         let party_two_master_key = MasterKey2::set_master_key(
             &party2_cc.chain_code,
             &kg_ec_key_pair_party2,
-            &kg_party_one_second_message.comm_witness.public_share,
+            &kg_party_one_second_message
+                .ecdh_second_message
+                .comm_witness
+                .public_share,
             &party_two_paillier,
         );
-        //coin flip:
-        let (party1_first_message, m1, r1) = Rotation1::key_rotate_first_message();
-        let party2_first_message = Rotation2::key_rotate_first_message(&party1_first_message);
-        let (party1_second_message, random1) =
-            Rotation1::key_rotate_second_message(&party2_first_message, &m1, &r1);
-        let random2 = Rotation2::key_rotate_second_message(
-            &party1_second_message,
-            &party2_first_message,
-            &party1_first_message,
-        );
-
-        //signing & verifying after:
-        //test signing:
-        let message = BigInt::from(1234);
-        let (sign_party_two_first_message, eph_comm_witness, eph_ec_key_pair_party2) =
-            MasterKey2::sign_first_message();
-        let (sign_party_one_first_message, eph_ec_key_pair_party1) =
-            MasterKey1::sign_first_message();
-        let sign_party_two_second_message = party_two_master_key.sign_second_message(
-            &eph_ec_key_pair_party2,
-            eph_comm_witness,
-            &sign_party_one_first_message,
-            &message,
-        );
-        let sign_party_one_second_message = party_one_master_key.sign_second_message(
-            &sign_party_two_second_message,
-            &sign_party_two_first_message,
-            &eph_ec_key_pair_party1,
-            &message,
-        );
-        sign_party_one_second_message.expect("bad signature");
-
-        //rotate:
-
-        let party_one_master_key_rotated = party_one_master_key.rotate(&random1);
-        let party_two_master_key_rotated = party_two_master_key.rotate(&random2);
-
-        // sign after rotate:
-        //test signing:
-        let message = BigInt::from(1234);
-        let (sign_party_two_first_message, eph_comm_witness, eph_ec_key_pair_party2) =
-            MasterKey2::sign_first_message();
-        let (sign_party_one_first_message, eph_ec_key_pair_party1) =
-            MasterKey1::sign_first_message();
-        let sign_party_two_second_message = party_two_master_key_rotated.sign_second_message(
-            &eph_ec_key_pair_party2,
-            eph_comm_witness,
-            &sign_party_one_first_message,
-            &message,
-        );
-        let sign_party_one_second_message = party_one_master_key_rotated.sign_second_message(
-            &sign_party_two_second_message,
-            &sign_party_two_first_message,
-            &eph_ec_key_pair_party1,
-            &message,
-        );
-        sign_party_one_second_message.expect("bad signature");
-    }
-
-    #[test]
-    fn test_key_gen() {
-        // key gen
-        let (kg_party_one_first_message, kg_comm_witness, kg_ec_key_pair_party1) =
-            MasterKey1::key_gen_first_message();
-        let (kg_party_two_first_message, _kg_ec_key_pair_party2) =
-            MasterKey2::key_gen_first_message();
-        let (kg_party_one_second_message, paillier_key_pair, range_proof, correct_key_proof) =
-            MasterKey1::key_gen_second_message(
-                kg_comm_witness,
-                &kg_ec_key_pair_party1,
-                &kg_party_two_first_message.d_log_proof,
-            );
-
-        let key_gen_second_message = MasterKey2::key_gen_second_message(
-            &kg_party_one_first_message,
-            &kg_party_one_second_message,
-            &paillier_key_pair.ek,
-            &paillier_key_pair.encrypted_share,
-            &range_proof,
-            &correct_key_proof,
-        );
-
-        assert!(key_gen_second_message.is_ok());
-
-        let (party_two_second_message, _party_two_paillier, pdl_chal) =
-            key_gen_second_message.unwrap();
-
-        assert!(party_two_second_message.is_ok());
-
-        let pdl_prover = MasterKey1::key_gen_third_message(&paillier_key_pair, &pdl_chal.c_tag);
-
-        let pdl_decom_party2 = MasterKey2::key_gen_third_message(&pdl_chal);
-
-        let pdl_decom_party1 = MasterKey1::key_gen_fourth_message(
-            &pdl_prover,
-            &pdl_chal.c_tag_tag,
-            kg_ec_key_pair_party1,
-            &pdl_decom_party2.a,
-            &pdl_decom_party2.b,
-            &pdl_decom_party2.blindness,
-        )
-        .expect("pdl error party 2");
-
-        MasterKey2::key_gen_fourth_message(
-            &pdl_chal,
-            &pdl_decom_party1.blindness,
-            &pdl_decom_party1.q_hat,
-            &pdl_prover.c_hat,
-        )
-        .expect("pdl error party1");
+        (party_one_master_key, party_two_master_key)
     }
 }

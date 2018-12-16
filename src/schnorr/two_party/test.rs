@@ -24,7 +24,7 @@ mod tests {
     use rotation::two_party::party1::Rotation1;
     use rotation::two_party::party2::Rotation2;
     use schnorr::two_party::{party1, party2};
-    use ManagementSystem;
+    use ManagementSystem2PSchnorr;
 
     #[test]
     fn test_commutativity_rotate_get_child() {

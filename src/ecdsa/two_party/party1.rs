@@ -10,10 +10,8 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 use curv::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
-use curv::elliptic::curves::traits::ECPoint;
 use curv::elliptic::curves::traits::ECScalar;
-use curv::{BigInt, FE, GE};
-use ManagementSystem;
+use curv::{BigInt, GE};
 
 use super::hd_key;
 use super::{MasterKey1, Party1Public};
@@ -21,87 +19,86 @@ use chain_code::two_party::party1::ChainCode1;
 use ecdsa::two_party::party2::SignMessage;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::EphKeyGenFirstMsg;
-use paillier::{Mul, Paillier, RawCiphertext, RawPlaintext};
+use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::PDLFirstMessage as Party2PDLFirstMsg;
+use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::PDLSecondMessage as Party2PDLSecondMsg;
+
+use paillier::EncryptionKey;
 use rotation::two_party::Rotation;
 use zk_paillier::zkproofs::{NICorrectKeyProof, RangeProofNi};
 use Errors::{self, SignError};
 
-impl ManagementSystem for MasterKey1 {
+pub struct KeyGenParty1Message2 {
+    pub ecdh_second_message: party_one::KeyGenSecondMsg,
+    pub ek: EncryptionKey,
+    pub c_key: BigInt,
+    pub correct_key_proof: NICorrectKeyProof,
+    pub range_proof: RangeProofNi,
+}
+pub struct RotationParty1Message1 {
+    pub ek: EncryptionKey,
+    pub c_key_new: BigInt,
+    pub correct_key_proof: NICorrectKeyProof,
+    pub range_proof: RangeProofNi,
+}
+impl MasterKey1 {
     // before rotation make sure both parties have the same key
-    fn rotate(self, cf: &Rotation) -> MasterKey1 {
-        let rand_str: FE = cf.rotation.clone();
-        let c_key_new = Paillier::mul(
-            &self.public.paillier_pub,
-            RawCiphertext::from(self.public.c_key.clone()),
-            RawPlaintext::from(cf.rotation.to_big_int()),
-        );
-
-        let c_key: &BigInt = c_key_new.0.as_ref();
-
+    pub fn rotate(
+        self,
+        cf: &Rotation,
+        party_one_private: party_one::Party1Private,
+        ek_new: &EncryptionKey,
+        c_key_new: &BigInt,
+    ) -> MasterKey1 {
         let public = Party1Public {
             q: self.public.q,
-            p1: self.public.p1.clone().scalar_mul(&rand_str.get_element()),
-            paillier_pub: self.public.paillier_pub,
-            c_key: c_key.to_owned(),
+            p1: &self.public.p1 * &cf.rotation,
+            p2: &self.public.p2 * &cf.rotation.invert(),
+            paillier_pub: ek_new.clone(),
+            c_key: c_key_new.clone(),
         };
         MasterKey1 {
             public,
-            private: party_one::Party1Private::update_private_key(
-                &self.private,
-                &cf.rotation.to_big_int(),
-            ),
+            private: party_one_private,
             chain_code: self.chain_code,
         }
     }
 
-    fn get_child(&self, location_in_hir: Vec<BigInt>) -> MasterKey1 {
+    pub fn get_child(&self, location_in_hir: Vec<BigInt>) -> MasterKey1 {
         let (public_key_new_child, f_l_new, cc_new) =
             hd_key(location_in_hir, &self.public.q, &self.chain_code.chain_code);
 
-        let c_key_new = Paillier::mul(
-            &self.public.paillier_pub,
-            RawCiphertext::from(self.public.c_key.clone()),
-            RawPlaintext::from(&f_l_new.to_big_int()),
-        );
-        let p1_old = self.public.p1.clone();
-
-        let c_key: &BigInt = c_key_new.0.as_ref();
-
         let public = Party1Public {
             q: public_key_new_child,
-            p1: p1_old * &f_l_new,
+            p1: self.public.p1.clone(),
+            p2: self.public.p2.clone() * &f_l_new,
             paillier_pub: self.public.paillier_pub.clone(),
-            c_key: c_key.to_owned(),
+            c_key: self.public.c_key.clone(),
         };
         MasterKey1 {
             public,
-            private: party_one::Party1Private::update_private_key(
-                &self.private,
-                &f_l_new.to_big_int(),
-            ),
+            private: self.private.clone(),
             chain_code: ChainCode1 { chain_code: cc_new },
         }
     }
-}
 
-impl MasterKey1 {
     pub fn set_master_key(
         chain_code: &GE,
-        ec_key_pair_party1: &party_one::EcKeyPair,
+        party_one_private: party_one::Party1Private,
+        party_one_public_ec_key: &GE,
         party2_first_message_public_share: &GE,
-        paillier_key_pair: &party_one::PaillierKeyPair,
+        paillier_key_pair: party_one::PaillierKeyPair,
     ) -> MasterKey1 {
         let party1_public = Party1Public {
-            q: party_one::compute_pubkey(ec_key_pair_party1, party2_first_message_public_share),
-            p1: ec_key_pair_party1.public_share.clone(),
+            q: party_one::compute_pubkey(&party_one_private, party2_first_message_public_share),
+            p1: party_one_public_ec_key.clone(),
+            p2: party2_first_message_public_share.clone(),
             paillier_pub: paillier_key_pair.ek.clone(),
             c_key: paillier_key_pair.encrypted_share.clone(),
         };
-        let part1_private =
-            party_one::Party1Private::set_private_key(&ec_key_pair_party1, &paillier_key_pair);
+
         MasterKey1 {
             public: party1_public,
-            private: part1_private,
+            private: party_one_private,
             chain_code: ChainCode1 {
                 chain_code: chain_code.clone(),
             },
@@ -120,46 +117,63 @@ impl MasterKey1 {
         ec_key_pair_party1: &party_one::EcKeyPair,
         proof: &DLogProof,
     ) -> (
-        party_one::KeyGenSecondMsg,
+        KeyGenParty1Message2,
         party_one::PaillierKeyPair,
-        RangeProofNi,
-        NICorrectKeyProof,
+        party_one::Party1Private,
     ) {
         let key_gen_second_message =
             party_one::KeyGenSecondMsg::verify_and_decommit(comm_witness, proof).expect("");
 
         let paillier_key_pair =
             party_one::PaillierKeyPair::generate_keypair_and_encrypted_share(&ec_key_pair_party1);
+
+        // party one set her private key:
+        let party_one_private =
+            party_one::Party1Private::set_private_key(&ec_key_pair_party1, &paillier_key_pair);
+
         let range_proof = party_one::PaillierKeyPair::generate_range_proof(
             &paillier_key_pair,
-            &ec_key_pair_party1,
+            &party_one_private,
         );
         let correct_key_proof =
             party_one::PaillierKeyPair::generate_ni_proof_correct_key(&paillier_key_pair);
         (
-            key_gen_second_message,
+            KeyGenParty1Message2 {
+                ecdh_second_message: key_gen_second_message,
+                ek: paillier_key_pair.ek.clone(),
+                c_key: paillier_key_pair.encrypted_share.clone(),
+                correct_key_proof,
+                range_proof,
+            },
             paillier_key_pair,
-            range_proof,
-            correct_key_proof,
+            party_one_private,
         )
     }
 
     pub fn key_gen_third_message(
-        paillier_key_pair: &party_one::PaillierKeyPair,
-        pdl_chal: &BigInt,
-    ) -> party_one::PDL {
-        paillier_key_pair.pdl_first_stage(pdl_chal)
+        party_two_pdl_first_message: &Party2PDLFirstMsg,
+        party_one_private: &party_one::Party1Private,
+    ) -> (party_one::PDLFirstMessage, party_one::PDLdecommit) {
+        party_one::PaillierKeyPair::pdl_first_stage(
+            &party_one_private,
+            &party_two_pdl_first_message,
+        )
     }
 
     pub fn key_gen_fourth_message(
-        pdl: &party_one::PDL,
-        c_tag_tag: &BigInt,
-        ec_key_pair: party_one::EcKeyPair,
-        a: &BigInt,
-        b: &BigInt,
-        blindness: &BigInt,
-    ) -> Result<(party_one::PDLdecommit), ()> {
-        party_one::PaillierKeyPair::pdl_second_stage(pdl, c_tag_tag, ec_key_pair, a, b, blindness)
+        pdl_party_one_first_message: &party_one::PDLFirstMessage,
+        pdl_party_two_first_message: &Party2PDLFirstMsg,
+        pdl_party_two_second_message: &Party2PDLSecondMsg,
+        party_one_private: party_one::Party1Private,
+        pdl_decommit: party_one::PDLdecommit,
+    ) -> Result<(party_one::PDLSecondMessage), ()> {
+        party_one::PaillierKeyPair::pdl_second_stage(
+            pdl_party_one_first_message,
+            pdl_party_two_first_message,
+            pdl_party_two_second_message,
+            party_one_private,
+            pdl_decommit,
+        )
     }
 
     pub fn sign_first_message() -> (party_one::EphKeyGenFirstMsg, party_one::EphEcKeyPair) {
@@ -197,6 +211,63 @@ impl MasterKey1 {
                 false => Err(SignError),
             },
             false => Err(SignError),
+        }
+    }
+
+    pub fn rotation_first_message(
+        &self,
+        cf: &Rotation,
+    ) -> (RotationParty1Message1, party_one::Party1Private) {
+        let (ek_new, c_key_new, new_private, correct_key_proof, range_proof) =
+            party_one::Party1Private::refresh_private_key(&self.private, &cf.rotation.to_big_int());
+
+        (
+            RotationParty1Message1 {
+                ek: ek_new,
+                c_key_new,
+                correct_key_proof,
+                range_proof,
+            },
+            new_private,
+        )
+    }
+
+    pub fn rotation_second_message(
+        rotate_party_two_message_one: &Party2PDLFirstMsg,
+        party_one_private: &party_one::Party1Private,
+    ) -> (party_one::PDLFirstMessage, party_one::PDLdecommit) {
+        party_one::PaillierKeyPair::pdl_first_stage(
+            &party_one_private,
+            &rotate_party_two_message_one,
+        )
+    }
+
+    pub fn rotation_third_message(
+        self,
+        rotation_first_message: &RotationParty1Message1,
+        party_one_private_new: party_one::Party1Private,
+        cf: &Rotation,
+        rotate_party_one_second_message: &party_one::PDLFirstMessage,
+        rotate_party_two_first_message: &Party2PDLFirstMsg,
+        rotate_party_two_second_message: &Party2PDLSecondMsg,
+        pdl_decommit: party_one::PDLdecommit,
+    ) -> Result<((party_one::PDLSecondMessage, MasterKey1)), ()> {
+        let rotate_party_one_third_message = party_one::PaillierKeyPair::pdl_second_stage(
+            rotate_party_one_second_message,
+            rotate_party_two_first_message,
+            rotate_party_two_second_message,
+            party_one_private_new.clone(),
+            pdl_decommit,
+        );
+        let master_key_new = self.rotate(
+            cf,
+            party_one_private_new,
+            &rotation_first_message.ek,
+            &rotation_first_message.c_key_new,
+        );
+        match rotate_party_one_third_message {
+            Ok(x) => Ok((x, master_key_new)),
+            Err(_) => Err(()),
         }
     }
 }
