@@ -27,6 +27,7 @@ use rotation::two_party::Rotation;
 use zk_paillier::zkproofs::{NICorrectKeyProof, RangeProofNi};
 use Errors::{self, SignError};
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct KeyGenParty1Message2 {
     pub ecdh_second_message: party_one::KeyGenSecondMsg,
     pub ek: EncryptionKey,
@@ -34,12 +35,15 @@ pub struct KeyGenParty1Message2 {
     pub correct_key_proof: NICorrectKeyProof,
     pub range_proof: RangeProofNi,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RotationParty1Message1 {
     pub ek: EncryptionKey,
     pub c_key_new: BigInt,
     pub correct_key_proof: NICorrectKeyProof,
     pub range_proof: RangeProofNi,
 }
+
 impl MasterKey1 {
     // before rotation make sure both parties have the same key
     pub fn rotate(
