@@ -120,9 +120,10 @@ impl MasterKey2 {
             party_two_sign_second_message.y2.clone(),
         ]);
         let sig = Signature::set_signature(&sign_helper.Xt, &y);
-        match verify(&self.pubkey, &sig, &sign_helper.es).is_ok() {
-            true => Ok(sig),
-            false => Err(SignError),
+        if verify(&self.pubkey, &sig, &sign_helper.es).is_ok() {
+            Ok(sig)
+        } else {
+            Err(SignError)
         }
     }
 }
@@ -195,9 +196,10 @@ impl KeyGen {
     ) -> Result<(GE), Errors> {
         let sig1 = Signature::set_signature(&received_message1.ix_pub[1], &received_message2.y1);
         let result = verify(&received_message1.ix_pub[0], &sig1, e);
-        match result.is_ok() {
-            true => Ok(&received_message1.ix_pub[0] + &self.local_keys.I.public_key),
-            false => Err(KeyGenError),
+        if result.is_ok() {
+            Ok(&received_message1.ix_pub[0] + &self.local_keys.I.public_key)
+        } else {
+            Err(KeyGenError)
         }
     }
 }

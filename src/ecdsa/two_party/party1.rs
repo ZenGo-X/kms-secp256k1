@@ -209,12 +209,14 @@ impl MasterKey1 {
         );
 
         let verify = party_one::verify(&signature, &self.public.q, message).is_ok();
-        match verify {
-            true => match verify_party_two_second_message {
-                true => Ok(signature),
-                false => Err(SignError),
-            },
-            false => Err(SignError),
+        if verify {
+            if verify_party_two_second_message {
+                Ok(signature)
+            } else {
+                Err(SignError)
+            }
+        } else {
+            Err(SignError)
         }
     }
 

@@ -178,8 +178,7 @@ impl MasterKey2 {
     pub fn key_gen_third_message(
         pdl_chal: &party_two::PDLchallenge,
     ) -> party_two::PDLSecondMessage {
-        let pdl_decom = party_two::PaillierPublic::pdl_decommit_c_tag_tag(&pdl_chal);
-        pdl_decom
+        party_two::PaillierPublic::pdl_decommit_c_tag_tag(&pdl_chal)
     }
 
     pub fn key_gen_fourth_message(
@@ -272,8 +271,7 @@ impl MasterKey2 {
     pub fn rotate_second_message(
         pdl_chal: &party_two::PDLchallenge,
     ) -> party_two::PDLSecondMessage {
-        let pdl_decom = party_two::PaillierPublic::pdl_decommit_c_tag_tag(&pdl_chal);
-        pdl_decom
+        party_two::PaillierPublic::pdl_decommit_c_tag_tag(&pdl_chal)
     }
 
     pub fn rotate_third_message(

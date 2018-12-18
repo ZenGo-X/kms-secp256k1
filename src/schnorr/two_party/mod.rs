@@ -46,7 +46,7 @@ pub fn hd_key(mut location_in_hir: Vec<BigInt>, pubkey: &GE, chain_code: &GE) ->
     // calc first element:
     let first = location_in_hir.remove(0);
     let pub_key_bi = pubkey.bytes_compressed_to_big_int();
-    let f = hmac_sha512::HMacSha512::create_hmac(&chain_code_bi, &vec![&pub_key_bi, &first]);
+    let f = hmac_sha512::HMacSha512::create_hmac(&chain_code_bi, &[&pub_key_bi, &first]);
     let f_l = &f >> 256;
     let f_r = &f & &mask;
     let f_l_fe: FE = ECScalar::from(&f_l);
@@ -62,7 +62,7 @@ pub fn hd_key(mut location_in_hir: Vec<BigInt>, pubkey: &GE, chain_code: &GE) ->
                 let pub_key_bi = acc.0.bytes_compressed_to_big_int();
                 let f = hmac_sha512::HMacSha512::create_hmac(
                     &acc.2.bytes_compressed_to_big_int(),
-                    &vec![&pub_key_bi, index],
+                    &[&pub_key_bi, index],
                 );
                 let f_l = &f >> 256;
                 let f_r = &f & &mask;
