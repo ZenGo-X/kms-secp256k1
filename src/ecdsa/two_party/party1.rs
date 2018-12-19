@@ -211,8 +211,8 @@ impl MasterKey1 {
         println!("kms: signature = {:?}", signature);
         println!("kms: signature.r = {:?}", signature.r.to_str_radix(16));
         println!("kms: signature.s = {:?}", signature.s.to_str_radix(16));
-        println!("kms: pubkey = {:?}", &self.public.q);
-        println!("kms: pubkey = {:?}", &self.public.q);
+        println!("kms: pubkey = {:?}", &self.public.q.get_element().to_string());
+        println!("kms: message = {:?}", message);
 
         let verify = party_one::verify(&signature, &self.public.q, message).is_ok();
         if verify {
