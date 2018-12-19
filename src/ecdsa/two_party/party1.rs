@@ -213,7 +213,7 @@ impl MasterKey1 {
         println!("kms: signature.r = {:?}", signature.r.to_str_radix(16));
         println!("kms: signature.s = {:?}", signature.s.to_str_radix(16));
         println!("kms: pubkey = {:?}", &self.public.q.bytes_compressed_to_big_int().to_str_radix(16));
-        println!("kms: message = {:?}", message);
+        println!("kms: message = {:?}", message.to_str_radix(16));
 
         let verify = party_one::verify(&signature, &self.public.q, message).is_ok();
         if verify {
