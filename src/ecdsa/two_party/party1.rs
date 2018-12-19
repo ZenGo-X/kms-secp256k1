@@ -11,6 +11,7 @@
 */
 use curv::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
 use curv::elliptic::curves::traits::ECScalar;
+use curv::elliptic::curves::traits::ECPoint;
 use curv::{BigInt, GE};
 
 use super::hd_key;
@@ -211,7 +212,7 @@ impl MasterKey1 {
         println!("kms: signature = {:?}", signature);
         println!("kms: signature.r = {:?}", signature.r.to_str_radix(16));
         println!("kms: signature.s = {:?}", signature.s.to_str_radix(16));
-        println!("kms: pubkey = {:?}", &self.public.q.get_element().to_string());
+        println!("kms: pubkey = {:?}", &self.public.q.bytes_compressed_to_big_int().to_str_radix(16));
         println!("kms: message = {:?}", message);
 
         let verify = party_one::verify(&signature, &self.public.q, message).is_ok();
