@@ -45,6 +45,10 @@ mod tests {
         // provable encryption
         let proof = Proof::prove(&segments, &encryptions, &G, &Y, &segment_size);
 
+        // party two verifier the backup zk proof
+        let result = proof.verify(&encryptions, &G, &Y, &Q, &segment_size);
+        assert!(result.is_ok());
+
         //full schnorr key gen:
         let keygen_party1 = party1::KeyGen::first_message();
         let keygen_party2 = party2::KeyGen::first_message_predefined(ss.clone());
@@ -114,14 +118,10 @@ mod tests {
             &party_one_fourth_message,
         )
         .expect("pdl error party1");
-        // recovery:
-        let secret_new = Msegmentation::assemble_fe(&segments.x_vec, &segment_size);
+        // recovery party two:
         let secret_decrypted = Msegmentation::decrypt(&encryptions, &G, &y, &segment_size);
 
-        assert_eq!(ss.get_element(), secret_new.get_element());
+        // debug test
         assert_eq!(ss.get_element(), secret_decrypted.get_element());
-
-        let result = proof.verify(&encryptions, &G, &Y, &Q, &segment_size);
-        assert!(result.is_ok());
     }
 }

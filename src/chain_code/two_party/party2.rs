@@ -14,7 +14,7 @@ use curv::cryptographic_primitives::proofs::ProofError;
 use curv::cryptographic_primitives::twoparty::dh_key_exchange::*;
 use curv::GE;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ChainCode2 {
     pub chain_code: GE,
 }

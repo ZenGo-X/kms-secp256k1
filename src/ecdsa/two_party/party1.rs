@@ -11,16 +11,16 @@
 */
 use curv::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
 use curv::elliptic::curves::traits::ECScalar;
-use curv::{BigInt, GE};
+use curv::{BigInt, FE, GE};
 
 use super::hd_key;
-use super::{MasterKey1, Party1Public};
+use super::{MasterKey1, MasterKey2, Party1Public};
 use chain_code::two_party::party1::ChainCode1;
 use ecdsa::two_party::party2::SignMessage;
-use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::EphKeyGenFirstMsg;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::PDLFirstMessage as Party2PDLFirstMsg;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::PDLSecondMessage as Party2PDLSecondMsg;
+use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one, party_two};
 
 use paillier::EncryptionKey;
 use rotation::two_party::Rotation;
@@ -106,6 +106,53 @@ impl MasterKey1 {
             chain_code: ChainCode1 {
                 chain_code: chain_code.clone(),
             },
+        }
+    }
+
+    //  master key of party two from counter party recovery (party one recovers party two secret share)
+    pub fn counter_master_key_from_recovered_secret(&self, party_two_secret: FE) -> MasterKey2 {
+        let (_, ec_key_pair_party2) =
+            party_two::KeyGenFirstMsg::create_with_fixed_secret_share(party_two_secret);
+        let party_two_paillier = party_two::PaillierPublic {
+            ek: self.public.paillier_pub.clone(),
+            encrypted_secret_share: self.public.c_key.clone(),
+        };
+        // set master keys:
+        MasterKey2::set_master_key(
+            &self.chain_code.chain_code,
+            &ec_key_pair_party2,
+            &ec_key_pair_party2.public_share,
+            &party_two_paillier,
+        )
+    }
+
+    pub fn recover_master_key(
+        recovered_secret: FE,
+        party_one_public: Party1Public,
+        chain_code: ChainCode1,
+    ) -> MasterKey1 {
+        //  master key of party one from party one secret recovery:
+        // q2 (public key of party two), chain code, and paillier data are needed for
+        // recovery of party one master key. q2 and cc must be the same
+        // as before. Therefore there are two options:
+        // (1) party 1 kept the public data of the master key and can retrieve it (only private key was lost)
+        // (2) party 1 lost the public data as well. in this case only party 2 can help with the public data.
+        //     if party 2 becomes malicious it means two failures at the same time from which the system will not be able to recover.
+        //     Therefore no point of running any secure protocol with party 2 and just accept the public data as is.
+        // paillier data can be refreshed. Because it is likely that paillier private key was lost, therefore a new paillier scheme must be created
+        // to make sure that party2 updates to the new paillier - a key rotation scheme must be performed. see test
+
+        let (_, _, ec_key_pair_party1) =
+            party_one::KeyGenFirstMsg::create_commitments_with_fixed_secret_share(recovered_secret);
+        let paillier_key_pair =
+            party_one::PaillierKeyPair::generate_keypair_and_encrypted_share(&ec_key_pair_party1);
+        // party one set her private key:
+        let party_one_private =
+            party_one::Party1Private::set_private_key(&ec_key_pair_party1, &paillier_key_pair);
+        MasterKey1 {
+            public: party_one_public,
+            private: party_one_private,
+            chain_code: chain_code,
         }
     }
 

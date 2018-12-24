@@ -15,8 +15,9 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 use super::hd_key;
-use super::MasterKey1;
+use super::{MasterKey1, MasterKey2};
 use chain_code::two_party::party1::ChainCode1;
+use chain_code::two_party::party2::ChainCode2;
 use curv::arithmetic::traits::Converter;
 use curv::elliptic::curves::traits::ECScalar;
 use curv::{BigInt, FE, GE};
@@ -77,6 +78,40 @@ impl MasterKey1 {
                 chain_code: chain_code.chain_code.clone(),
             },
             pubkey: &local_key_gen.first_message.ix_pub[0] + &key_gen_received_message1.ix_pub[0],
+        }
+    }
+
+    //  master key of party two from counter party recovery (party one recovers party two secret share)
+    pub fn counter_master_key_from_recovered_secret(&self, party_two_secret: FE) -> MasterKey2 {
+        let local_keys_recovered = Keys::create_from(party_two_secret);
+        // set master keys:
+        MasterKey2 {
+            local_key_pair: local_keys_recovered.I,
+            chain_code: ChainCode2 {
+                chain_code: self.chain_code.chain_code.clone(),
+            },
+            pubkey: self.pubkey.clone(),
+        }
+    }
+
+    pub fn recover_master_key(
+        recovered_secret: FE,
+        party_one_public: GE,
+        chain_code: ChainCode1,
+    ) -> MasterKey1 {
+        //  master key of party two from party two secret recovery:
+        // q1 (public key of party one), chain code are needed for
+        // recovery of party two master key. There are two options:
+        // (1) party 2 kept the public data of the master key and can retrieve it (only private key was lost)
+        // (2) party 2 lost the public data as well. in this case only party 1 can help with the public data.
+        //     if party 1 becomes malicious it means two failures at the same time from which the system will not be able to recover.
+        //     Therefore no point of running any secure protocol with party 1 and just accept the public data as is.
+        let local_keys_recovered = Keys::create_from(recovered_secret);
+
+        MasterKey1 {
+            local_key_pair: local_keys_recovered.I,
+            chain_code,
+            pubkey: party_one_public,
         }
     }
 

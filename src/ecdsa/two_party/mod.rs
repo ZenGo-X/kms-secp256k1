@@ -19,7 +19,7 @@ use curv::{BigInt, FE, GE};
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one, party_two};
 use paillier::*;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Party1Public {
     pub q: GE,
     pub p1: GE,
@@ -28,14 +28,14 @@ pub struct Party1Public {
     pub c_key: BigInt,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct MasterKey1 {
     pub public: Party1Public,
     private: party_one::Party1Private,
     chain_code: ChainCode1,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Party2Public {
     pub q: GE,
     pub p2: GE,
@@ -44,7 +44,7 @@ pub struct Party2Public {
     pub c_key: BigInt,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct MasterKey2 {
     pub public: Party2Public,
     pub private: party_two::Party2Private,
