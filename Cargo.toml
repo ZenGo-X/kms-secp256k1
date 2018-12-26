@@ -30,7 +30,6 @@ features =  ["curvesecp256k1"]
 
 [dependencies.multi-party-ecdsa]
 git = "https://github.com/KZen-networks/multi-party-ecdsa"
-branch = "pdl-sub-protocol"
 
 [dependencies.centipede]
 git = "https://github.com/KZen-networks/centipede"
