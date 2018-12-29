@@ -16,6 +16,7 @@ pub mod party1;
 pub mod party2;
 pub mod test;
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Rotation {
     pub rotation: FE,
 }
