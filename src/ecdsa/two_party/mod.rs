@@ -48,7 +48,7 @@ pub struct Party2Public {
 pub struct MasterKey2 {
     pub public: Party2Public,
     pub private: party_two::Party2Private,
-    chain_code: ChainCode2,
+    pub chain_code: ChainCode2,
 }
 
 pub mod party1;
