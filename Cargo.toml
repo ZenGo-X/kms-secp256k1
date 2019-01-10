@@ -19,11 +19,11 @@ paillier = { git = "https://github.com/mortendahl/rust-paillier" }
 [dependencies.cryptography-utils]
 git = "https://github.com/KZen-networks/cryptography-utils"
 features =  ["curvesecp256k1"]
-tag = "v0.0.1"
+branch = "v0.0.1-no-pdl"
 
 [dependencies.multi-party-ecdsa]
 git = "https://github.com/KZen-networks/multi-party-ecdsa"
-tag = "v0.0.1"
+branch = "v0.0.1-no-pdl"
 
 [patch.crates-io]
 rust-gmp = { version = "0.5.0", features = ["serde_support"], git = "https://github.com/KZen-networks/rust-gmp" }
