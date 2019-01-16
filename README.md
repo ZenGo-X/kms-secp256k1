@@ -23,7 +23,7 @@ We define two roles: Owner and Provider. The Owner is the end-user who owns the 
 * The library has no unified methodology to handle errors. Usually errors are propagated from lower level code. 
 
 ### To play with the code 
-Our working branch is `schnorr-support`. It is best to start with the tests code:
+It is best to start with the tests code:
 1. `poc.rs` for VE recovery and master keys generation
 2. `ecdsa/two_party/test` and `schnorr/two_party/test` for keygen, signing, rotation, hd tests. Notice that HD and rotation are commutative such that the order of the operations does not matter. 
 
