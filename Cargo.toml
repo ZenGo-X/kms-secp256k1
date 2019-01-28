@@ -20,6 +20,7 @@ git = "https://github.com/mortendahl/rust-paillier"
 
 [dependencies.zk-paillier]
 git = "https://github.com/KZen-networks/zk-paillier"
+branch = "des"
 
 [dependencies.multi-party-schnorr]
 git = "https://github.com/KZen-networks/multi-party-schnorr"
