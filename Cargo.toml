@@ -23,7 +23,7 @@ branch = "v0.0.1-no-pdl"
 
 [dependencies.multi-party-ecdsa]
 git = "https://github.com/KZen-networks/multi-party-ecdsa"
-branch = "v0.0.1-no-pdl"
+branch = "support-v"
 
 [patch.crates-io]
 rust-gmp = { version = "0.5.0", features = ["serde_support"], git = "https://github.com/KZen-networks/rust-gmp" }
