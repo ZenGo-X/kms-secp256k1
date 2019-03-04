@@ -11,7 +11,7 @@
 */
 
 use curv::cryptographic_primitives::proofs::ProofError;
-use curv::cryptographic_primitives::twoparty::dh_key_exchange::*;
+use curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::*;
 use curv::GE;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]

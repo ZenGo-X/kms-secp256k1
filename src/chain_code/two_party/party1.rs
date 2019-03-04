@@ -9,8 +9,8 @@
     version 3 of the License, or (at your option) any later version.
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
-use curv::cryptographic_primitives::proofs::dlog_zk_protocol::DLogProof;
-use curv::cryptographic_primitives::twoparty::dh_key_exchange::*;
+use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
+use curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::*;
 
 use curv::GE;
 
