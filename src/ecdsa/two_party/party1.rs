@@ -12,10 +12,10 @@
 use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use curv::elliptic::curves::traits::ECScalar;
 use curv::{BigInt, FE, GE};
+use curv::elliptic::curves::traits::ECPoint;
 
 use super::hd_key;
 use super::{MasterKey1, MasterKey2, Party1Public};
-use curv::elliptic::curves::traits::ECPoint;
 use ecdsa::two_party::party2::SignMessage;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::EphKeyGenFirstMsg;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::PDLFirstMessage as Party2PDLFirstMsg;

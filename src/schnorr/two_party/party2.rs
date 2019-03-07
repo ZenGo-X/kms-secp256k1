@@ -20,6 +20,7 @@ use chain_code::two_party::party1::ChainCode1;
 use chain_code::two_party::party2::ChainCode2;
 use curv::arithmetic::traits::Converter;
 use curv::elliptic::curves::traits::ECScalar;
+use curv::elliptic::curves::traits::ECPoint;
 use curv::{BigInt, FE, GE};
 use multi_party_schnorr::protocols::multisig::*;
 use rotation::two_party::Rotation;
@@ -183,7 +184,7 @@ impl ManagementSystem2PSchnorr for MasterKey2 {
 
         MasterKey2 {
             local_key_pair: local_key_pair_updated,
-            chain_code: ChainCode2 { chain_code: cc_new },
+            chain_code: ChainCode2 { chain_code: cc_new.bytes_compressed_to_big_int() },
             pubkey: public_key_new_child,
         }
     }

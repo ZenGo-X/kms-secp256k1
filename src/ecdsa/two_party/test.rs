@@ -430,7 +430,7 @@ mod tests {
         );
         // set master keys:
         let party_one_master_key = MasterKey1::set_master_key(
-            &party1_cc.chain_code.bytes_compressed_to_big_int(),
+            &party1_cc.chain_code,
             party_one_private,
             &kg_comm_witness.public_share,
             &kg_party_two_first_message.public_share,
@@ -438,7 +438,7 @@ mod tests {
         );
 
         let party_two_master_key = MasterKey2::set_master_key(
-            &party2_cc.chain_code.bytes_compressed_to_big_int(),
+            &party2_cc.chain_code,
             &kg_ec_key_pair_party2,
             &kg_party_one_second_message
                 .ecdh_second_message

@@ -19,6 +19,7 @@ use chain_code::two_party::party2::ChainCode2;
 use curv::cryptographic_primitives::hashing::hmac_sha512;
 use curv::cryptographic_primitives::hashing::traits::KeyedHash;
 use curv::elliptic::curves::traits::{ECPoint, ECScalar};
+use curv::arithmetic::traits::Converter;
 use curv::{BigInt, FE, GE};
 use multi_party_schnorr::protocols::multisig::KeyPair;
 // since this special case requires two out of two signers we ignore the "accountable" property
@@ -39,9 +40,8 @@ pub mod party1;
 pub mod party2;
 mod test;
 
-pub fn hd_key(mut location_in_hir: Vec<BigInt>, pubkey: &GE, chain_code: &GE) -> (GE, FE, GE) {
+pub fn hd_key(mut location_in_hir: Vec<BigInt>, pubkey: &GE, chain_code_bi: &BigInt) -> (GE, FE, GE) {
     let mask = BigInt::from(2).pow(256) - BigInt::one();
-    let chain_code_bi = chain_code.bytes_compressed_to_big_int();
 
     // calc first element:
     let first = location_in_hir.remove(0);
@@ -52,7 +52,8 @@ pub fn hd_key(mut location_in_hir: Vec<BigInt>, pubkey: &GE, chain_code: &GE) ->
     let f_l_fe: FE = ECScalar::from(&f_l);
     let g: GE = ECPoint::generator();
     let f_r_fe: FE = ECScalar::from(&f_r);
-    let chain_code = chain_code * &f_r_fe;
+    let bn_to_slice = BigInt::to_vec(chain_code_bi);
+    let chain_code = GE::from_bytes(&bn_to_slice[1..33]).unwrap() * &f_r_fe;
     let pub_key = pubkey.clone() + &g * &f_l_fe;
 
     let (public_key_new_child, f_l_new, cc_new) =
