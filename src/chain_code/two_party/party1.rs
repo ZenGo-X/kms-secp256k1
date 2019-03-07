@@ -11,8 +11,8 @@
 */
 use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::*;
-use curv::{BigInt, GE};
 use curv::elliptic::curves::traits::ECPoint;
+use curv::{BigInt, GE};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ChainCode1 {
@@ -34,7 +34,8 @@ impl ChainCode1 {
         party2_first_message_public_share: &GE,
     ) -> ChainCode1 {
         ChainCode1 {
-            chain_code: compute_pubkey(ec_key_pair, party2_first_message_public_share).bytes_compressed_to_big_int(),
+            chain_code: compute_pubkey(ec_key_pair, party2_first_message_public_share)
+                .bytes_compressed_to_big_int(),
         }
     }
 }

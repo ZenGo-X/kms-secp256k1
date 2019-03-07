@@ -10,9 +10,9 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
+use curv::elliptic::curves::traits::ECPoint;
 use curv::elliptic::curves::traits::ECScalar;
 use curv::{BigInt, FE, GE};
-use curv::elliptic::curves::traits::ECPoint;
 
 use super::hd_key;
 use super::{MasterKey1, MasterKey2, Party1Public};
