@@ -77,7 +77,7 @@ impl MasterKey2 {
                 &self.private,
                 &f_l_new.to_big_int(),
             ),
-            chain_code: cc_new.bytes_compressed_to_big_int()
+            chain_code: cc_new.bytes_compressed_to_big_int(),
         }
     }
 

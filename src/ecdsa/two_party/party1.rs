@@ -15,12 +15,12 @@ use curv::{BigInt, FE, GE};
 
 use super::hd_key;
 use super::{MasterKey1, MasterKey2, Party1Public};
+use curv::elliptic::curves::traits::ECPoint;
 use ecdsa::two_party::party2::SignMessage;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::EphKeyGenFirstMsg;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::PDLFirstMessage as Party2PDLFirstMsg;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::PDLSecondMessage as Party2PDLSecondMsg;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one, party_two};
-use curv::elliptic::curves::traits::ECPoint;
 
 use paillier::EncryptionKey;
 use rotation::two_party::Rotation;
@@ -81,7 +81,7 @@ impl MasterKey1 {
         MasterKey1 {
             public,
             private: self.private.clone(),
-            chain_code: cc_new.bytes_compressed_to_big_int()
+            chain_code: cc_new.bytes_compressed_to_big_int(),
         }
     }
 

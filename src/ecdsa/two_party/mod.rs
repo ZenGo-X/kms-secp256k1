@@ -10,10 +10,10 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
+use curv::arithmetic::traits::Converter;
 use curv::cryptographic_primitives::hashing::hmac_sha512;
 use curv::cryptographic_primitives::hashing::traits::KeyedHash;
 use curv::elliptic::curves::traits::{ECPoint, ECScalar};
-use curv::arithmetic::traits::Converter;
 use curv::{BigInt, FE, GE};
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one, party_two};
 use paillier::*;
@@ -54,7 +54,11 @@ pub mod party1;
 pub mod party2;
 mod test;
 
-pub fn hd_key(mut location_in_hir: Vec<BigInt>, pubkey: &GE, chain_code_bi: &BigInt) -> (GE, FE, GE) {
+pub fn hd_key(
+    mut location_in_hir: Vec<BigInt>,
+    pubkey: &GE,
+    chain_code_bi: &BigInt,
+) -> (GE, FE, GE) {
     let mask = BigInt::from(2).pow(256) - BigInt::one();
     // let public_key = self.public.q.clone();
 
@@ -67,8 +71,8 @@ pub fn hd_key(mut location_in_hir: Vec<BigInt>, pubkey: &GE, chain_code_bi: &Big
     let f_l_fe: FE = ECScalar::from(&f_l);
     let f_r_fe: FE = ECScalar::from(&f_r);
 
-
-    let chain_code = GE::from_bytes(&BigInt::to_vec(chain_code_bi)).unwrap() * &f_r_fe;
+    let bn_to_slice = BigInt::to_vec(chain_code_bi);
+    let chain_code = GE::from_bytes(&bn_to_slice[1..33]).unwrap() * &f_r_fe;
     let pub_key = pubkey * &f_l_fe;
 
     let (public_key_new_child, f_l_new, cc_new) =
