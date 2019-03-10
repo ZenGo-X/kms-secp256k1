@@ -21,7 +21,7 @@ use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one, par
 
 use super::hd_key;
 use super::{MasterKey1, MasterKey2, Party2Public};
-use chain_code::two_party::party2::ChainCode2;
+use curv::elliptic::curves::traits::ECPoint;
 use curv::elliptic::curves::traits::ECScalar;
 use rotation::two_party::Rotation;
 
@@ -62,7 +62,7 @@ impl MasterKey2 {
 
     pub fn get_child(&self, location_in_hir: Vec<BigInt>) -> MasterKey2 {
         let (public_key_new_child, f_l_new, cc_new) =
-            hd_key(location_in_hir, &self.public.q, &self.chain_code.chain_code);
+            hd_key(location_in_hir, &self.public.q, &self.chain_code);
 
         let public = Party2Public {
             q: public_key_new_child,
@@ -77,12 +77,12 @@ impl MasterKey2 {
                 &self.private,
                 &f_l_new.to_big_int(),
             ),
-            chain_code: ChainCode2 { chain_code: cc_new },
+            chain_code: cc_new.bytes_compressed_to_big_int(),
         }
     }
 
     pub fn set_master_key(
-        chain_code: &GE,
+        chain_code: &BigInt,
         ec_key_pair_party2: &party_two::EcKeyPair,
         party1_second_message_public_share: &GE,
         paillier_public: &party_two::PaillierPublic,
@@ -98,9 +98,7 @@ impl MasterKey2 {
         MasterKey2 {
             public: party2_public,
             private: party2_private,
-            chain_code: ChainCode2 {
-                chain_code: chain_code.clone(),
-            },
+            chain_code: chain_code.clone(),
         }
     }
 
@@ -116,7 +114,7 @@ impl MasterKey2 {
 
         // set master keys:
         MasterKey1::set_master_key(
-            &self.chain_code.chain_code,
+            &self.chain_code,
             party_one_private,
             &ec_key_pair_party1.public_share,
             &self.public.p2,
@@ -127,7 +125,7 @@ impl MasterKey2 {
     pub fn recover_master_key(
         recovered_secret: FE,
         party_two_public: Party2Public,
-        chain_code: ChainCode2,
+        chain_code: BigInt,
     ) -> MasterKey2 {
         //  master key of party two from party two secret recovery:
         // q1 (public key of party one), chain code, and public paillier data (c_key, ek) are needed for

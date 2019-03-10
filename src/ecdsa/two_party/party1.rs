@@ -10,12 +10,12 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
+use curv::elliptic::curves::traits::ECPoint;
 use curv::elliptic::curves::traits::ECScalar;
 use curv::{BigInt, FE, GE};
 
 use super::hd_key;
 use super::{MasterKey1, MasterKey2, Party1Public};
-use chain_code::two_party::party1::ChainCode1;
 use ecdsa::two_party::party2::SignMessage;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::EphKeyGenFirstMsg;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_two::PDLFirstMessage as Party2PDLFirstMsg;
@@ -69,7 +69,7 @@ impl MasterKey1 {
 
     pub fn get_child(&self, location_in_hir: Vec<BigInt>) -> MasterKey1 {
         let (public_key_new_child, f_l_new, cc_new) =
-            hd_key(location_in_hir, &self.public.q, &self.chain_code.chain_code);
+            hd_key(location_in_hir, &self.public.q, &self.chain_code);
 
         let public = Party1Public {
             q: public_key_new_child,
@@ -81,12 +81,12 @@ impl MasterKey1 {
         MasterKey1 {
             public,
             private: self.private.clone(),
-            chain_code: ChainCode1 { chain_code: cc_new },
+            chain_code: cc_new.bytes_compressed_to_big_int(),
         }
     }
 
     pub fn set_master_key(
-        chain_code: &GE,
+        chain_code: &BigInt,
         party_one_private: party_one::Party1Private,
         party_one_public_ec_key: &GE,
         party2_first_message_public_share: &GE,
@@ -103,9 +103,7 @@ impl MasterKey1 {
         MasterKey1 {
             public: party1_public,
             private: party_one_private,
-            chain_code: ChainCode1 {
-                chain_code: chain_code.clone(),
-            },
+            chain_code: chain_code.clone(),
         }
     }
 
@@ -119,7 +117,7 @@ impl MasterKey1 {
         };
         // set master keys:
         MasterKey2::set_master_key(
-            &self.chain_code.chain_code,
+            &self.chain_code,
             &ec_key_pair_party2,
             &ec_key_pair_party2.public_share,
             &party_two_paillier,
@@ -129,7 +127,7 @@ impl MasterKey1 {
     pub fn recover_master_key(
         recovered_secret: FE,
         party_one_public: Party1Public,
-        chain_code: ChainCode1,
+        chain_code: BigInt,
     ) -> MasterKey1 {
         //  master key of party one from party one secret recovery:
         // q2 (public key of party two), chain code, and paillier data are needed for
