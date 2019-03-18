@@ -235,7 +235,7 @@ impl MasterKey1 {
         eph_key_gen_first_message_party_two: &EphKeyGenFirstMsg,
         eph_ec_key_pair_party1: &party_one::EphEcKeyPair,
         message: &BigInt,
-    ) -> Result<party_one::Signature, Errors> {
+    ) -> Result<party_one::SignatureRecid, Errors> {
         let verify_party_two_second_message =
             party_one::EphKeyGenSecondMsg::verify_commitments_and_dlog_proof(
                 &eph_key_gen_first_message_party_two,
@@ -243,7 +243,7 @@ impl MasterKey1 {
             )
             .is_ok();
 
-        let signature = party_one::Signature::compute(
+        let signature_with_recid = party_one::Signature::compute_with_recid(
             &self.private,
             &party_two_sign_message.partial_sig.c3,
             &eph_ec_key_pair_party1,
@@ -253,10 +253,17 @@ impl MasterKey1 {
                 .public_share,
         );
 
+        // Creating a standard signature for the verification, currently discarding recid
+        // TODO: Investigate what verification could be done with recid
+        let signature = party_one::Signature {
+            r: signature_with_recid.r.clone(),
+            s: signature_with_recid.s.clone(),
+        };
+
         let verify = party_one::verify(&signature, &self.public.q, message).is_ok();
         if verify {
             if verify_party_two_second_message {
-                Ok(signature)
+                Ok(signature_with_recid)
             } else {
                 Err(SignError)
             }
