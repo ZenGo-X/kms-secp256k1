@@ -109,6 +109,9 @@ pub struct SignMessage9 {
     pub s_i: FE,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RotationParty1Message1 {}
+
 pub mod party1;
 pub mod party2;
 mod test;

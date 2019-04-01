@@ -18,6 +18,93 @@ mod tests {
     use chain_code::two_party::party2;
     use curv::BigInt;
     use ecdsa::two_party_gg18::{MasterKey1, MasterKey2};
+    use rotation::two_party::party1::Rotation1;
+    use rotation::two_party::party2::Rotation2;
+
+    #[test]
+    fn test_rotate() {
+        //keygen
+        let (master_key1, master_key2) = key_gen();
+
+        //coin flip:
+        let (party1_first_message, m1, r1) = Rotation1::key_rotate_first_message();
+        let party2_first_message = Rotation2::key_rotate_first_message(&party1_first_message);
+        let (party1_second_message, random1) =
+            Rotation1::key_rotate_second_message(&party2_first_message, &m1, &r1);
+        let random2 = Rotation2::key_rotate_second_message(
+            &party1_second_message,
+            &party2_first_message,
+            &party1_first_message,
+        );
+
+        assert_eq!(random1.rotation, random2.rotation);
+
+        let (party1_message1, party1_additive_key, party1_decom1) =
+            master_key1.rotation_first_message(&random1);
+        let (party2_message1, party2_additive_key, party2_decom1) =
+            master_key2.rotation_first_message(&random2);
+
+        let party1_message2 = MasterKey1::rotation_second_message(party1_decom1);
+        let party2_message2 = MasterKey2::rotation_second_message(party2_decom1);
+
+        let (party1_message3, ss1_to_self, party1_y_vec, party1_ek_vec) = master_key1
+            .rotation_third_message(
+                &party1_additive_key,
+                party1_message1.clone(),
+                party2_message1.clone(),
+                party1_message2.clone(),
+                party2_message2.clone(),
+            );
+
+        let (party2_message3, ss2_to_self, party2_y_vec, party2_ek_vec) = master_key2
+            .rotation_third_message(
+                &party2_additive_key,
+                party1_message1,
+                party2_message1,
+                party1_message2,
+                party2_message2,
+            );
+
+        let (party1_message4, party1_linear_key, party1_vss_vec) =
+            MasterKey1::rotation_fourth_message(
+                &party1_additive_key,
+                party1_message3.clone(),
+                party2_message3.clone(),
+                ss1_to_self,
+                &party1_y_vec,
+            );
+
+        let (party2_message4, party2_linear_key, party2_vss_vec) =
+            MasterKey2::rotation_fourth_message(
+                &party2_additive_key,
+                party1_message3,
+                party2_message3,
+                ss2_to_self,
+                &party2_y_vec,
+            );
+
+        let _master_key2 = master_key2.rotate_master_key(
+            party1_message4.clone(),
+            party2_message4.clone(),
+            party2_y_vec.clone(),
+            party2_additive_key,
+            party2_linear_key,
+            party2_vss_vec,
+            party2_ek_vec,
+        );
+
+        let _master_key1 = master_key1.rotate_master_key(
+            party1_message4,
+            party2_message4,
+            party1_y_vec.clone(),
+            party1_additive_key,
+            party1_linear_key,
+            party1_vss_vec,
+            party1_ek_vec,
+        );
+
+        //(master_key1, master_key2)
+    }
 
     #[test]
     fn test_sign() {
@@ -173,7 +260,7 @@ mod tests {
                 party1_message3.clone(),
                 party2_message3.clone(),
                 ss1_to_self,
-                &party2_y_vec,
+                &party1_y_vec,
             );
 
         let (party2_message4, party2_linear_key, party2_vss_vec) =

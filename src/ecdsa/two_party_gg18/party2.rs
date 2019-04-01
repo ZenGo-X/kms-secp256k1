@@ -14,11 +14,13 @@
 use super::*;
 use curv::cryptographic_primitives::proofs::sigma_correct_homomorphic_elgamal_enc::HomoELGamalProof;
 use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
+use curv::elliptic::curves::traits::ECScalar;
 use curv::BigInt;
 use curv::{FE, GE};
 use ecdsa::two_party_gg18::{MasterKey2, MasterKeyPublic};
 use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::mta::{MessageA, MessageB};
 use paillier::EncryptionKey;
+use rotation::two_party::Rotation;
 
 impl MasterKey2 {
     pub fn key_gen_first_message() -> (KeyGenMessage1, Keys, KeyGenDecommitMessage1) {
@@ -321,5 +323,82 @@ impl MasterKey2 {
             .output_signature(&message9_vec)
             .expect("verification failed");;
         (r, s)
+    }
+
+    pub fn rotation_first_message(
+        &self,
+        cf: &Rotation,
+    ) -> (KeyGenMessage1, Keys, KeyGenDecommitMessage1) {
+        let cf_fe: FE = cf.rotation;
+        let cf_bn = cf_fe.to_big_int();
+        let q = FE::q();
+        let negate_cf = q - cf_bn;
+        let neg_cf_fe: FE = ECScalar::from(&negate_cf);
+        let party2_keys = PartyPrivate::refresh_private_key(&self.private, &neg_cf_fe, 2);
+        let (bc_i, decom_i) = party2_keys.phase1_broadcast_phase3_proof_of_correct_key();
+        let party2_message1 = KeyGenMessage1 { bc_i };
+        (party2_message1, party2_keys, decom_i)
+    }
+
+    pub fn rotation_second_message(decom_i: KeyGenDecommitMessage1) -> KeyGenMessage2 {
+        KeyGenMessage2 { decom_i }
+    }
+
+    pub fn rotation_third_message(
+        &self,
+        party2_keys: &Keys,
+        party1_message1: KeyGenMessage1,
+        party2_message1: KeyGenMessage1,
+        party1_message2: KeyGenMessage2,
+        party2_message2: KeyGenMessage2,
+    ) -> (KeyGenMessage3, FE, Vec<GE>, Vec<EncryptionKey>) {
+        // make sure rotation of counter party is correct:
+        let y_sum_new = party2_keys.y_i.clone() + party1_message2.decom_i.y_i.clone();
+        assert_eq!(y_sum_new, self.public.q.clone());
+        MasterKey2::key_gen_third_message(
+            party2_keys,
+            party1_message1,
+            party2_message1,
+            party1_message2,
+            party2_message2,
+        )
+    }
+
+    pub fn rotation_fourth_message(
+        party2_keys: &Keys,
+        party1_message3: KeyGenMessage3,
+        party2_message3: KeyGenMessage3,
+        party2_ss_share_1: FE,
+        y_vec: &Vec<GE>,
+    ) -> (KeyGenMessage4, SharedKeys, Vec<VerifiableSS>) {
+        MasterKey2::key_gen_fourth_message(
+            party2_keys,
+            party1_message3,
+            party2_message3,
+            party2_ss_share_1,
+            y_vec,
+        )
+    }
+
+    pub fn rotate_master_key(
+        &self,
+        party1_message4: KeyGenMessage4,
+        party2_message4: KeyGenMessage4,
+        y_vec: Vec<GE>,
+        party2_keys: Keys,
+        party2_shared_keys: SharedKeys,
+        vss_vec: Vec<VerifiableSS>,
+        paillier_enc_vec: Vec<EncryptionKey>,
+    ) -> Self {
+        MasterKey2::set_master_key(
+            party1_message4,
+            party2_message4,
+            y_vec,
+            party2_keys,
+            party2_shared_keys,
+            vss_vec,
+            paillier_enc_vec,
+            &self.chain_code,
+        )
     }
 }
