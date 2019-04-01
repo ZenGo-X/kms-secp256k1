@@ -11,6 +11,7 @@
 */
 
 use curv::cryptographic_primitives::proofs::sigma_correct_homomorphic_elgamal_enc::HomoELGamalProof;
+use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
 use curv::BigInt;
 use curv::{FE, GE};
@@ -39,10 +40,25 @@ pub struct MasterKey2 {
     chain_code: BigInt,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
+pub struct KeyGenMessage1 {
+    pub bc_i: KeyGenBroadcastMessage1,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct KeyGenMessage2 {
+    pub decom_i: KeyGenDecommitMessage1,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct KeyGenMessage3 {
     pub vss_scheme: VerifiableSS,
     pub secret_share: FE,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct KeyGenMessage4 {
+    pub dlog_proof: DLogProof,
 }
 
 #[derive(Serialize, Deserialize)]

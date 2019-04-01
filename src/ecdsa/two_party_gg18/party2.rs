@@ -13,7 +13,6 @@
 
 use super::*;
 use curv::cryptographic_primitives::proofs::sigma_correct_homomorphic_elgamal_enc::HomoELGamalProof;
-use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
 use curv::BigInt;
 use curv::{FE, GE};
@@ -22,23 +21,31 @@ use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::mta::{MessageA, Me
 use paillier::EncryptionKey;
 
 impl MasterKey2 {
-    pub fn key_gen_first_message() -> (Keys, KeyGenBroadcastMessage1, KeyGenDecommitMessage1) {
+    pub fn key_gen_first_message() -> (KeyGenMessage1, Keys, KeyGenDecommitMessage1) {
         let party_keys = Keys::create(2 as usize);
         let (bc_i, decom_i) = party_keys.phase1_broadcast_phase3_proof_of_correct_key();
-        (party_keys, bc_i, decom_i)
+        let party2_message1 = KeyGenMessage1 { bc_i };
+        (party2_message1, party_keys, decom_i)
+    }
+
+    pub fn keygen_second_message(decom_i: KeyGenDecommitMessage1) -> KeyGenMessage2 {
+        KeyGenMessage2 { decom_i }
     }
 
     pub fn key_gen_third_message(
         party2_keys: &Keys,
-        party1_message1: KeyGenBroadcastMessage1,
-        party2_message1: KeyGenBroadcastMessage1,
-        party1_message2: KeyGenDecommitMessage1,
-        party2_message2: KeyGenDecommitMessage1,
+        party1_message1: KeyGenMessage1,
+        party2_message1: KeyGenMessage1,
+        party1_message2: KeyGenMessage2,
+        party2_message2: KeyGenMessage2,
     ) -> (KeyGenMessage3, FE, Vec<GE>, Vec<EncryptionKey>) {
-        let y_slice = &[party1_message2.y_i, party2_keys.y_i];
-        let decom_slice = &[party1_message2, party2_message2];
-        let bc1_slice = &[party1_message1.clone(), party2_message1.clone()];
-        let paillier_enc_slice = &[party1_message1.e.clone(), party2_message1.e.clone()];
+        let y_slice = &[party1_message2.decom_i.y_i, party2_keys.y_i];
+        let decom_slice = &[party1_message2.decom_i, party2_message2.decom_i];
+        let bc1_slice = &[party1_message1.bc_i.clone(), party2_message1.bc_i.clone()];
+        let paillier_enc_slice = &[
+            party1_message1.bc_i.e.clone(),
+            party2_message1.bc_i.e.clone(),
+        ];
         let parames = Parameters {
             threshold: 1 as usize,
             share_count: 2 as usize,
@@ -64,18 +71,17 @@ impl MasterKey2 {
 
     pub fn key_gen_fourth_message(
         party2_keys: &Keys,
-        vss_scheme_party1: VerifiableSS,
-        vss_scheme_party2: VerifiableSS,
-        party1_ss_share_1: FE,
+        party1_message3: KeyGenMessage3,
+        party2_message3: KeyGenMessage3,
         party2_ss_share_1: FE,
         y_vec: &Vec<GE>,
-    ) -> (SharedKeys, DLogProof, Vec<VerifiableSS>) {
+    ) -> (KeyGenMessage4, SharedKeys, Vec<VerifiableSS>) {
         let parames = Parameters {
             threshold: 1 as usize,
             share_count: 2 as usize,
         };
-        let vss_slice = &[vss_scheme_party1, vss_scheme_party2];
-        let ss_slice = &[party1_ss_share_1, party2_ss_share_1];
+        let vss_slice = &[party1_message3.vss_scheme, party2_message3.vss_scheme];
+        let ss_slice = &[party1_message3.secret_share, party2_ss_share_1];
         let (shared_keys, dlog_proof) = party2_keys
             .phase2_verify_vss_construct_keypair_phase3_pok_dlog(
                 &parames,
@@ -85,11 +91,13 @@ impl MasterKey2 {
                 &(2 as usize),
             )
             .expect("invalid vss");
-        (shared_keys, dlog_proof, vss_slice.to_vec())
+        let party2_message4 = KeyGenMessage4 { dlog_proof };
+        (party2_message4, shared_keys, vss_slice.to_vec())
     }
 
     pub fn set_master_key(
-        dlog_proof: Vec<DLogProof>,
+        party1_message4: KeyGenMessage4,
+        party2_message4: KeyGenMessage4,
         y_vec: Vec<GE>,
         party2_keys: Keys,
         party2_shared_keys: SharedKeys,
@@ -97,6 +105,8 @@ impl MasterKey2 {
         paillier_enc_vec: Vec<EncryptionKey>,
         chain_code: &BigInt,
     ) -> Self {
+        let dlog_proof = [party1_message4.dlog_proof, party2_message4.dlog_proof].to_vec();
+
         let parames = Parameters {
             threshold: 1 as usize,
             share_count: 2 as usize,
