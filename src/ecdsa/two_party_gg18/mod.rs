@@ -9,10 +9,13 @@
     version 3 of the License, or (at your option) any later version.
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
-
+use curv::arithmetic::traits::Converter;
+use curv::cryptographic_primitives::hashing::hmac_sha512;
+use curv::cryptographic_primitives::hashing::traits::KeyedHash;
 use curv::cryptographic_primitives::proofs::sigma_correct_homomorphic_elgamal_enc::HomoELGamalProof;
 use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
+use curv::elliptic::curves::traits::{ECPoint, ECScalar};
 use curv::BigInt;
 use curv::{FE, GE};
 use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::mta::{MessageA, MessageB};
@@ -26,14 +29,14 @@ pub struct MasterKeyPublic {
     pub paillier_key_vec: Vec<EncryptionKey>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct MasterKey1 {
     pub public: MasterKeyPublic,
     private: PartyPrivate,
     chain_code: BigInt,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct MasterKey2 {
     pub public: MasterKeyPublic,
     private: PartyPrivate,
@@ -116,7 +119,6 @@ pub mod party1;
 pub mod party2;
 mod test;
 
-/*
 pub fn hd_key(
     mut location_in_hir: Vec<BigInt>,
     pubkey: &GE,
@@ -136,7 +138,8 @@ pub fn hd_key(
 
     let bn_to_slice = BigInt::to_vec(chain_code_bi);
     let chain_code = GE::from_bytes(&bn_to_slice[1..33]).unwrap() * &f_r_fe;
-    let pub_key = pubkey * &f_l_fe;
+    let g: GE = ECPoint::generator();
+    let pub_key = *pubkey + g * &f_l_fe;
 
     let (public_key_new_child, f_l_new, cc_new) =
         location_in_hir
@@ -152,8 +155,7 @@ pub fn hd_key(
                 let f_l_fe: FE = ECScalar::from(&f_l);
                 let f_r_fe: FE = ECScalar::from(&f_r);
 
-                (acc.0 * &f_l_fe, f_l_fe * &acc.1, &acc.2 * &f_r_fe)
+                (acc.0 + g * &f_l_fe, f_l_fe + &acc.1, &acc.2 * &f_r_fe)
             });
     (public_key_new_child, f_l_new, cc_new)
 }
-*/

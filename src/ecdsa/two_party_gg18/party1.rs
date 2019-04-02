@@ -11,11 +11,12 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
+use super::hd_key;
 use super::*;
 use curv::cryptographic_primitives::proofs::sigma_correct_homomorphic_elgamal_enc::HomoELGamalProof;
 use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
-use curv::BigInt;
-use curv::{FE, GE};
+use curv::elliptic::curves::traits::ECPoint;
+use curv::{BigInt, FE, GE};
 use ecdsa::two_party_gg18::{MasterKey1, MasterKeyPublic};
 use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::mta::{MessageA, MessageB};
 use paillier::EncryptionKey;
@@ -396,5 +397,45 @@ impl MasterKey1 {
             paillier_enc_vec,
             &self.chain_code,
         )
+    }
+
+    pub fn get_child(&self, location_in_hir: Vec<BigInt>) -> MasterKey1 {
+        let (public_key_new_child, f_l_new, cc_new) =
+            hd_key(location_in_hir, &self.public.q, &self.chain_code);
+
+        // optimize!
+        let g: GE = ECPoint::generator();
+        let com_zero_new = self.public.vss_scheme_vec[0].commitments[0] + g * f_l_new;
+        let mut com_iter_unchanged = self.public.vss_scheme_vec[0].commitments.iter();
+        let _ = com_iter_unchanged.next().unwrap();
+        let com_vec_new = (0..self.public.vss_scheme_vec[1].commitments.len())
+            .map(|i| {
+                if i == 0 {
+                    com_zero_new
+                } else {
+                    com_iter_unchanged.next().unwrap().clone()
+                }
+            })
+            .collect::<Vec<GE>>();
+        let new_vss = VerifiableSS {
+            parameters: self.public.vss_scheme_vec[0].parameters.clone(),
+            commitments: com_vec_new,
+        };
+        let new_vss_vec = [new_vss, self.public.vss_scheme_vec[1].clone()];
+
+        let master_key_public = MasterKeyPublic {
+            q: public_key_new_child,
+            vss_scheme_vec: new_vss_vec.to_vec(),
+            paillier_key_vec: self.public.paillier_key_vec.clone(),
+        };
+
+        let master_key_private = self.private.update_private_key(&f_l_new, &f_l_new);
+
+        let master_key1 = MasterKey1 {
+            public: master_key_public,
+            private: master_key_private,
+            chain_code: cc_new.bytes_compressed_to_big_int(),
+        };
+        master_key1
     }
 }
