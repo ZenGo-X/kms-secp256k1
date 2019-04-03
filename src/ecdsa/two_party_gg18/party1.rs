@@ -18,11 +18,34 @@ use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
 use curv::elliptic::curves::traits::ECPoint;
 use curv::{BigInt, FE, GE};
 use ecdsa::two_party_gg18::{MasterKey1, MasterKeyPublic};
+use ecdsa::two_party_lindell17::MasterKey2 as MasterKey2L;
 use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::mta::{MessageA, MessageB};
 use paillier::EncryptionKey;
 use rotation::two_party::Rotation;
 
+#[derive(Clone, Serialize, Deserialize)]
+pub struct KeyGenMessage0Party1Transform {
+    pub p1m1: KeyGenMessage1,
+    pub message_b: MessageB,
+}
+
 impl MasterKey1 {
+    pub fn key_gen_zero_message_transform(
+        lindell_mk2: &MasterKey2L,
+    ) -> (KeyGenMessage0Party1Transform, Keys, KeyGenDecommitMessage1) {
+        let (message_b, beta) = lindell_mk2
+            .private
+            .to_mta_message_b(&lindell_mk2.public.paillier_pub, &lindell_mk2.public.c_key);
+        let party_keys = Keys::create_from(beta, 1 as usize);
+        let (bc_i, decom_i) = party_keys.phase1_broadcast_phase3_proof_of_correct_key();
+        let party1_message1 = KeyGenMessage1 { bc_i };
+        let party1_message1 = KeyGenMessage0Party1Transform {
+            p1m1: party1_message1,
+            message_b,
+        };
+        (party1_message1, party_keys, decom_i)
+    }
+
     pub fn key_gen_first_message() -> (KeyGenMessage1, Keys, KeyGenDecommitMessage1) {
         let party_keys = Keys::create(1 as usize);
         let (bc_i, decom_i) = party_keys.phase1_broadcast_phase3_proof_of_correct_key();

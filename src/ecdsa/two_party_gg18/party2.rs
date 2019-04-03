@@ -17,12 +17,27 @@ use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
 use curv::elliptic::curves::traits::ECScalar;
 use curv::BigInt;
 use curv::{FE, GE};
+use ecdsa::two_party_gg18::party1::KeyGenMessage0Party1Transform;
 use ecdsa::two_party_gg18::{MasterKey2, MasterKeyPublic};
+use ecdsa::two_party_lindell17::MasterKey1 as MasterKey1L;
 use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::mta::{MessageA, MessageB};
 use paillier::EncryptionKey;
 use rotation::two_party::Rotation;
-
 impl MasterKey2 {
+    pub fn key_gen_zero_message_transform(
+        lindell_mk1: &MasterKey1L,
+        party1_first_message_t: &KeyGenMessage0Party1Transform,
+    ) -> (KeyGenMessage1, Keys, KeyGenDecommitMessage1) {
+        let alpha = lindell_mk1
+            .private
+            .to_mta_message_b(party1_first_message_t.message_b.clone())
+            .expect("wrong dlog or m_b");
+        let party_keys = Keys::create_from(alpha, 2 as usize);
+        let (bc_i, decom_i) = party_keys.phase1_broadcast_phase3_proof_of_correct_key();
+        let party1_message1 = KeyGenMessage1 { bc_i };
+        (party1_message1, party_keys, decom_i)
+    }
+
     pub fn key_gen_first_message() -> (KeyGenMessage1, Keys, KeyGenDecommitMessage1) {
         let party_keys = Keys::create(2 as usize);
         let (bc_i, decom_i) = party_keys.phase1_broadcast_phase3_proof_of_correct_key();

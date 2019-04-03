@@ -18,9 +18,120 @@ mod tests {
     use chain_code::two_party::party2;
     use curv::BigInt;
     use ecdsa::two_party_gg18::{MasterKey1, MasterKey2};
+    use ecdsa::two_party_lindell17::MasterKey1 as MK1L;
+    use ecdsa::two_party_lindell17::MasterKey2 as MK2L;
+
     use rotation::two_party::party1::Rotation1;
     use rotation::two_party::party2::Rotation2;
 
+    #[test]
+    fn test_lindell_gg_transform() {
+        // lindell key gen
+        let (master_key1_lindell, master_key2_lindell) = lindell_key_gen();
+        // lindell get child:
+        let master_key1_lindell_c =
+            master_key1_lindell.get_child(vec![BigInt::from(10), BigInt::from(5)]);
+        let master_key2_lindell_c =
+            master_key2_lindell.get_child(vec![BigInt::from(10), BigInt::from(5)]);
+        // transform:
+        let (party1_message1, party1_additive_key, party1_decom1) =
+            MasterKey1::key_gen_zero_message_transform(&master_key2_lindell_c);
+        let (party2_message1, party2_additive_key, party2_decom1) =
+            MasterKey2::key_gen_zero_message_transform(&master_key1_lindell_c, &party1_message1);
+
+        // copy of the rest of gg keygen
+
+        let party1_message2 = MasterKey1::keygen_second_message(party1_decom1);
+        let party2_message2 = MasterKey2::keygen_second_message(party2_decom1);
+
+        let (party1_message3, ss1_to_self, party1_y_vec, party1_ek_vec) =
+            MasterKey1::key_gen_third_message(
+                &party1_additive_key,
+                party1_message1.p1m1.clone(),
+                party2_message1.clone(),
+                party1_message2.clone(),
+                party2_message2.clone(),
+            );
+
+        let (party2_message3, ss2_to_self, party2_y_vec, party2_ek_vec) =
+            MasterKey2::key_gen_third_message(
+                &party2_additive_key,
+                party1_message1.p1m1,
+                party2_message1,
+                party1_message2,
+                party2_message2,
+            );
+
+        let (party1_message4, party1_linear_key, party1_vss_vec) =
+            MasterKey1::key_gen_fourth_message(
+                &party1_additive_key,
+                party1_message3.clone(),
+                party2_message3.clone(),
+                ss1_to_self,
+                &party1_y_vec,
+            );
+
+        let (party2_message4, party2_linear_key, party2_vss_vec) =
+            MasterKey2::key_gen_fourth_message(
+                &party2_additive_key,
+                party1_message3,
+                party2_message3,
+                ss2_to_self,
+                &party2_y_vec,
+            );
+
+        // chain code
+        let (cc_party_one_first_message, cc_comm_witness, cc_ec_key_pair1) =
+            party1::ChainCode1::chain_code_first_message();
+        let (cc_party_two_first_message, cc_ec_key_pair2) =
+            party2::ChainCode2::chain_code_first_message();
+        let cc_party_one_second_message = party1::ChainCode1::chain_code_second_message(
+            cc_comm_witness,
+            &cc_party_two_first_message.d_log_proof,
+        );
+
+        let cc_party_two_second_message = party2::ChainCode2::chain_code_second_message(
+            &cc_party_one_first_message,
+            &cc_party_one_second_message,
+        );
+        assert!(cc_party_two_second_message.is_ok());
+
+        let party1_cc = party1::ChainCode1::compute_chain_code(
+            &cc_ec_key_pair1,
+            &cc_party_two_first_message.public_share,
+        );
+
+        let party2_cc = party2::ChainCode2::compute_chain_code(
+            &cc_ec_key_pair2,
+            &cc_party_one_second_message.comm_witness.public_share,
+        );
+
+        let master_key2 = MasterKey2::set_master_key(
+            party1_message4.clone(),
+            party2_message4.clone(),
+            party2_y_vec.clone(),
+            party2_additive_key,
+            party2_linear_key,
+            party2_vss_vec,
+            party2_ek_vec,
+            &party2_cc.chain_code,
+        );
+
+        let master_key1 = MasterKey1::set_master_key(
+            party1_message4,
+            party2_message4,
+            party1_y_vec.clone(),
+            party1_additive_key,
+            party1_linear_key,
+            party1_vss_vec,
+            party1_ek_vec,
+            &party1_cc.chain_code,
+        );
+
+        sign(master_key1.clone(), master_key2.clone(), BigInt::from(100));
+
+        assert_eq!(master_key1.public.q, master_key1_lindell_c.public.q);
+    }
     #[test]
     fn test_get_child() {
         let (master_key1, master_key2) = key_gen();
@@ -539,5 +650,94 @@ mod tests {
         let (party2_r, party2_s) = MasterKey2::output_signature(party1_message9, party2_local_sig);
         assert_eq!(party1_r, party2_r);
         assert_eq!(party1_s, party2_s);
+    }
+
+    pub fn lindell_key_gen() -> (MK1L, MK2L) {
+        // key gen
+        let (kg_party_one_first_message, kg_comm_witness, kg_ec_key_pair_party1) =
+            MK1L::key_gen_first_message();
+        let (kg_party_two_first_message, kg_ec_key_pair_party2) = MK2L::key_gen_first_message();
+        let (kg_party_one_second_message, party_one_paillier_key_pair, party_one_private) =
+            MK1L::key_gen_second_message(
+                kg_comm_witness.clone(),
+                &kg_ec_key_pair_party1,
+                &kg_party_two_first_message.d_log_proof,
+            );
+
+        let key_gen_second_message =
+            MK2L::key_gen_second_message(&kg_party_one_first_message, &kg_party_one_second_message);
+
+        assert!(key_gen_second_message.is_ok());
+
+        let (party_two_second_message, party_two_paillier, party_two_pdl_chal) =
+            key_gen_second_message.unwrap();
+
+        let (party_one_third_message, party_one_pdl_decommit) = MK1L::key_gen_third_message(
+            &party_two_second_message.pdl_first_message,
+            &party_one_private,
+        );
+
+        let party_two_third_message = MK2L::key_gen_third_message(&party_two_pdl_chal);
+
+        let party_one_fourth_message = MK1L::key_gen_fourth_message(
+            &party_one_third_message,
+            &party_two_second_message.pdl_first_message,
+            &party_two_third_message,
+            party_one_private.clone(),
+            party_one_pdl_decommit,
+        )
+        .expect("pdl error party 2");
+
+        MK2L::key_gen_fourth_message(
+            &party_two_pdl_chal,
+            &party_one_third_message,
+            &party_one_fourth_message,
+        )
+        .expect("pdl error party1");
+
+        // chain code
+        let (cc_party_one_first_message, cc_comm_witness, cc_ec_key_pair1) =
+            party1::ChainCode1::chain_code_first_message();
+        let (cc_party_two_first_message, cc_ec_key_pair2) =
+            party2::ChainCode2::chain_code_first_message();
+        let cc_party_one_second_message = party1::ChainCode1::chain_code_second_message(
+            cc_comm_witness,
+            &cc_party_two_first_message.d_log_proof,
+        );
+
+        let cc_party_two_second_message = party2::ChainCode2::chain_code_second_message(
+            &cc_party_one_first_message,
+            &cc_party_one_second_message,
+        );
+        assert!(cc_party_two_second_message.is_ok());
+
+        let party1_cc = party1::ChainCode1::compute_chain_code(
+            &cc_ec_key_pair1,
+            &cc_party_two_first_message.public_share,
+        );
+
+        let party2_cc = party2::ChainCode2::compute_chain_code(
+            &cc_ec_key_pair2,
+            &cc_party_one_second_message.comm_witness.public_share,
+        );
+        // set master keys:
+        let party_one_master_key = MK1L::set_master_key(
+            &party1_cc.chain_code,
+            party_one_private,
+            &kg_comm_witness.public_share,
+            &kg_party_two_first_message.public_share,
+            party_one_paillier_key_pair,
+        );
+
+        let party_two_master_key = MK2L::set_master_key(
+            &party2_cc.chain_code,
+            &kg_ec_key_pair_party2,
+            &kg_party_one_second_message
+                .ecdh_second_message
+                .comm_witness
+                .public_share,
+            &party_two_paillier,
+        );
+        (party_one_master_key, party_two_master_key)
     }
 }

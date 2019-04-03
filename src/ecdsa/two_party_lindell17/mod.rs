@@ -30,8 +30,8 @@ pub struct Party1Public {
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct MasterKey1 {
     pub public: Party1Public,
-    private: party_one::Party1Private,
-    chain_code: BigInt,
+    pub private: party_one::Party1Private,
+    pub chain_code: BigInt,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
