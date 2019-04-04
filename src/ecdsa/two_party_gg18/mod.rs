@@ -107,7 +107,7 @@ pub struct SignMessage8 {
     pub phase_5d_decom2: Phase5DDecom2,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SignMessage9 {
     pub s_i: FE,
 }
