@@ -64,7 +64,7 @@ pub struct KeyGenMessage4 {
     pub dlog_proof: DLogProof,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct SignMessage1 {
     pub com: SignBroadcastPhase1,
     pub m_a_k: MessageA,
