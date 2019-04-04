@@ -353,10 +353,10 @@ mod tests {
             &party2_local_sig,
         );
 
-        let (party1_r, party1_s) = MasterKey1::output_signature(party2_message9, party1_local_sig);
-        let (party2_r, party2_s) = MasterKey2::output_signature(party1_message9, party2_local_sig);
-        assert_eq!(party1_r, party2_r);
-        assert_eq!(party1_s, party2_s);
+        let sig1 = MasterKey1::output_signature(party2_message9, party1_local_sig);
+        let sig2 = MasterKey2::output_signature(party1_message9, party2_local_sig);
+        assert_eq!(sig1.r, sig2.r);
+        assert_eq!(sig1.s, sig2.s);
     }
 
     pub fn key_gen() -> (MasterKey1, MasterKey2) {
@@ -646,10 +646,10 @@ mod tests {
             &party2_local_sig,
         );
 
-        let (party1_r, party1_s) = MasterKey1::output_signature(party2_message9, party1_local_sig);
-        let (party2_r, party2_s) = MasterKey2::output_signature(party1_message9, party2_local_sig);
-        assert_eq!(party1_r, party2_r);
-        assert_eq!(party1_s, party2_s);
+        let sig1 = MasterKey1::output_signature(party2_message9, party1_local_sig);
+        let sig2 = MasterKey2::output_signature(party1_message9, party2_local_sig);
+        assert_eq!(sig1.r, sig2.r);
+        assert_eq!(sig1.s, sig2.s);
     }
 
     pub fn lindell_key_gen() -> (MK1L, MK2L) {

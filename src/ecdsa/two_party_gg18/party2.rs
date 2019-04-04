@@ -332,12 +332,12 @@ impl MasterKey2 {
         sign_message9
     }
 
-    pub fn output_signature(party2_message9: SignMessage9, local_sig: LocalSignature) -> (FE, FE) {
+    pub fn output_signature(party2_message9: SignMessage9, local_sig: LocalSignature) -> Signature {
         let message9_vec = [party2_message9.s_i].to_vec();
-        let (r, s) = local_sig
+        let sig = local_sig
             .output_signature(&message9_vec)
             .expect("verification failed");;
-        (r, s)
+        sig
     }
 
     pub fn rotation_first_message(
