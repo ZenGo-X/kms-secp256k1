@@ -32,8 +32,8 @@ pub struct MasterKeyPublic {
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct MasterKey1 {
     pub public: MasterKeyPublic,
-    private: PartyPrivate,
-    chain_code: BigInt,
+    pub private: PartyPrivate,
+    pub chain_code: BigInt,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]

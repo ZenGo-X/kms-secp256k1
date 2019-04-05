@@ -80,32 +80,6 @@ mod tests {
                 &party2_y_vec,
             );
 
-        // chain code
-        let (cc_party_one_first_message, cc_comm_witness, cc_ec_key_pair1) =
-            party1::ChainCode1::chain_code_first_message();
-        let (cc_party_two_first_message, cc_ec_key_pair2) =
-            party2::ChainCode2::chain_code_first_message();
-        let cc_party_one_second_message = party1::ChainCode1::chain_code_second_message(
-            cc_comm_witness,
-            &cc_party_two_first_message.d_log_proof,
-        );
-
-        let cc_party_two_second_message = party2::ChainCode2::chain_code_second_message(
-            &cc_party_one_first_message,
-            &cc_party_one_second_message,
-        );
-        assert!(cc_party_two_second_message.is_ok());
-
-        let party1_cc = party1::ChainCode1::compute_chain_code(
-            &cc_ec_key_pair1,
-            &cc_party_two_first_message.public_share,
-        );
-
-        let party2_cc = party2::ChainCode2::compute_chain_code(
-            &cc_ec_key_pair2,
-            &cc_party_one_second_message.comm_witness.public_share,
-        );
-
         let master_key2 = MasterKey2::set_master_key(
             party1_message4.clone(),
             party2_message4.clone(),
@@ -114,7 +88,7 @@ mod tests {
             party2_linear_key,
             party2_vss_vec,
             party2_ek_vec,
-            &party2_cc.chain_code,
+            &master_key2_lindell.chain_code,
         );
 
         let master_key1 = MasterKey1::set_master_key(
@@ -125,7 +99,7 @@ mod tests {
             party1_linear_key,
             party1_vss_vec,
             party1_ek_vec,
-            &party1_cc.chain_code,
+            &master_key1_lindell.chain_code,
         );
 
         sign(master_key1.clone(), master_key2.clone(), BigInt::from(100));
