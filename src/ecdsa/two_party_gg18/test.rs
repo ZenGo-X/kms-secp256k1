@@ -16,7 +16,8 @@ mod tests {
     //use centipede::juggling::segmentation::Msegmentation;
     use chain_code::two_party::party1;
     use chain_code::two_party::party2;
-    use curv::BigInt;
+    use curv::elliptic::curves::traits::ECScalar;
+    use curv::{BigInt, FE};
     use ecdsa::two_party_gg18::{MasterKey1, MasterKey2};
     use ecdsa::two_party_lindell17::MasterKey1 as MK1L;
     use ecdsa::two_party_lindell17::MasterKey2 as MK2L;
@@ -335,9 +336,9 @@ mod tests {
 
     pub fn key_gen() -> (MasterKey1, MasterKey2) {
         let (party1_message1, party1_additive_key, party1_decom1) =
-            MasterKey1::key_gen_first_message();
+            MasterKey1::key_gen_first_message(FE::zero());
         let (party2_message1, party2_additive_key, party2_decom1) =
-            MasterKey2::key_gen_first_message();
+            MasterKey2::key_gen_first_message(FE::zero());
 
         let party1_message2 = MasterKey1::keygen_second_message(party1_decom1);
         let party2_message2 = MasterKey2::keygen_second_message(party2_decom1);

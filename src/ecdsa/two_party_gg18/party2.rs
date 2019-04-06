@@ -38,8 +38,12 @@ impl MasterKey2 {
         (party1_message1, party_keys, decom_i)
     }
 
-    pub fn key_gen_first_message() -> (KeyGenMessage1, Keys, KeyGenDecommitMessage1) {
-        let party_keys = Keys::create(2 as usize);
+    pub fn key_gen_first_message(u: FE) -> (KeyGenMessage1, Keys, KeyGenDecommitMessage1) {
+        let party_keys = if u == FE::zero() {
+            Keys::create(2 as usize)
+        } else {
+            Keys::create_from(u, 2 as usize)
+        };
         let (bc_i, decom_i) = party_keys.phase1_broadcast_phase3_proof_of_correct_key();
         let party2_message1 = KeyGenMessage1 { bc_i };
         (party2_message1, party_keys, decom_i)
