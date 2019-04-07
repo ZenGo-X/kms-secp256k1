@@ -86,7 +86,7 @@ pub struct SignMessage4 {
     pub decommit: SignDecommitPhase1,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignMessage5 {
     pub phase5_com: Phase5Com1,
 }
