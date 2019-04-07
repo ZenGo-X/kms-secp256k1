@@ -70,7 +70,7 @@ pub struct SignMessage1 {
     pub m_a_k: MessageA,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignMessage2 {
     pub m_b_gamma: MessageB,
     pub m_b_w: MessageB,
