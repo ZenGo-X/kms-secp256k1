@@ -22,8 +22,8 @@ mod tests {
     use centipede::juggling::segmentation::Msegmentation;
     use curv::elliptic::curves::traits::{ECPoint, ECScalar};
     use curv::{FE, GE};
-    use ecdsa::two_party::MasterKey1 as EcdsaMasterKey1;
-    use ecdsa::two_party::MasterKey2 as EcdsaMasterKey2;
+    use ecdsa::two_party_lindell17::MasterKey1 as EcdsaMasterKey1;
+    use ecdsa::two_party_lindell17::MasterKey2 as EcdsaMasterKey2;
     use schnorr::two_party::party1;
     use schnorr::two_party::party2;
 

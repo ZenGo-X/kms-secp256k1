@@ -27,11 +27,11 @@ pub struct Party1Public {
     pub c_key: BigInt,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize)]
 pub struct MasterKey1 {
     pub public: Party1Public,
-    private: party_one::Party1Private,
-    chain_code: BigInt,
+    pub private: party_one::Party1Private,
+    pub chain_code: BigInt,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -43,7 +43,7 @@ pub struct Party2Public {
     pub c_key: BigInt,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize)]
 pub struct MasterKey2 {
     pub public: Party2Public,
     pub private: party_two::Party2Private,
