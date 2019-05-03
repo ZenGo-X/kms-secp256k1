@@ -14,6 +14,7 @@
 #[cfg(test)]
 mod tests {
     use super::super::{MasterKey1, MasterKey2};
+    use centipede::juggling::proof_system::Proof;
     use centipede::juggling::segmentation::Msegmentation;
     use chain_code::two_party::party1;
     use chain_code::two_party::party2;
@@ -35,7 +36,7 @@ mod tests {
         */
         // key gen
         let (party_one_master_key, party_two_master_key) = test_key_gen();
-        // backup by party one of his private secret share: (we skip the verifiable part of proof and later verify)
+        // backup by party one of his private secret share:
         let segment_size = 8;
         let G: GE = GE::generator();
         /*
@@ -67,15 +68,22 @@ mod tests {
         assert_eq!(Y.clone(), G * &y);
 
         // encryption
-        let (_, encryptions_secret_party1) =
-            party_one_master_key
-                .private
-                .to_encrypted_segment(&segment_size, 32, &Y, &G);
+        let (segments, encryptions_secret_party1) = party_one_master_key
+            .private
+            .to_encrypted_segment(&segment_size, 32, &Y, &G);
+        // proof and verify test:
+
+        let proof = Proof::prove(&segments, &encryptions_secret_party1, &G, &Y, &segment_size);
+        let verify = proof.verify(
+            &encryptions_secret_party1,
+            &G,
+            &Y,
+            &party_two_master_key.public.p1,
+            &segment_size,
+        );
+        assert!(verify.is_ok());
+
         // encryption
-        let (_, _encryptions_secret_party2) =
-            party_two_master_key
-                .private
-                .to_encrypted_segment(&segment_size, 32, &Y, &G);
 
         // first case: party one is dead, party two wants to recover the full key.
         // In practice party two will recover party_one_master_key and from that point will run both logic parties locally
@@ -83,6 +91,8 @@ mod tests {
             Msegmentation::decrypt(&encryptions_secret_party1, &G, &y, &segment_size);
         let _party_one_master_key_recovered = party_two_master_key
             .counter_master_key_from_recovered_secret(secret_decrypted_party_one.clone());
+        //  println!("master key 1 {:?}", party_one_master_key.public);
+        //  println!("master key 1 rec{:?}", _party_one_master_key_recovered.public);
     }
 
     #[test]
