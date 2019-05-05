@@ -30,7 +30,8 @@ pub struct Party1Public {
 #[derive(Serialize, Deserialize)]
 pub struct MasterKey1 {
     pub public: Party1Public,
-    private: party_one::Party1Private,
+    // Why is the field below public? See: https://github.com/KZen-networks/kms-secp256k1/issues/20
+    pub private: party_one::Party1Private,
     chain_code: BigInt,
 }
 
