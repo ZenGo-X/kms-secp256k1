@@ -264,6 +264,7 @@ impl MasterKey1 {
         println!("signature = {:?}", signature);
 
         let verify = party_one::verify(&signature, &self.public.q, message).is_ok();
+        println!("verify = {:?}", verify);
         if verify {
             if verify_party_two_second_message {
                 Ok(signature_with_recid)
