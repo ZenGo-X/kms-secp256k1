@@ -242,6 +242,7 @@ impl MasterKey1 {
                 &party_two_sign_message.second_message,
             )
             .is_ok();
+        println!("verify_party_two_second_message = {:?}", verify_party_two_second_message);
 
         let signature_with_recid = party_one::Signature::compute_with_recid(
             &self.private,
@@ -252,6 +253,7 @@ impl MasterKey1 {
                 .comm_witness
                 .public_share,
         );
+        println!("signature_with_recid = {:?}", signature_with_recid);
 
         // Creating a standard signature for the verification, currently discarding recid
         // TODO: Investigate what verification could be done with recid
@@ -259,6 +261,7 @@ impl MasterKey1 {
             r: signature_with_recid.r.clone(),
             s: signature_with_recid.s.clone(),
         };
+        println!("signature = {:?}", signature);
 
         let verify = party_one::verify(&signature, &self.public.q, message).is_ok();
         if verify {
