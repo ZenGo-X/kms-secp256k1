@@ -14,14 +14,86 @@
 #[cfg(test)]
 mod tests {
     use super::super::{MasterKey1, MasterKey2};
+    use centipede::juggling::proof_system::Proof;
     use centipede::juggling::segmentation::Msegmentation;
     use chain_code::two_party::party1;
     use chain_code::two_party::party2;
+    use curv::arithmetic::traits::Converter;
     use curv::elliptic::curves::traits::{ECPoint, ECScalar};
     use curv::{BigInt, FE, GE};
     use rotation::two_party::party1::Rotation1;
     use rotation::two_party::party2::Rotation2;
     use rotation::two_party::Rotation;
+
+    #[test]
+    fn test_recovery_from_openssl() {
+        // script for keygen:
+        /*
+        #create EC private key
+        openssl ecparam -genkey -name secp256k1 -out pri1.pem
+        #derive EC public key
+        openssl ec -in pri1.pem -outform PEM -pubout -out pub1.pem
+        */
+        // key gen
+        let (party_one_master_key, party_two_master_key) = test_key_gen();
+        // backup by party one of his private secret share:
+        let segment_size = 8;
+        let G: GE = GE::generator();
+        /*
+                -----BEGIN PUBLIC KEY-----
+                    MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAELP9n+oNPDoHhEfJoYk8mFMGx4AupPEER
+                dzwcJIxeqP/xMujsMEDU2mc3fzN9OGbLFnqCqgxBAe31rT84mOfrfA==
+                    -----END PUBLIC KEY-----
+        */
+        let Y_hex = "2CFF67FA834F0E81E111F268624F2614C1B1E00BA93C4111773C1C248C5EA8FFF132E8EC3040D4DA67377F337D3866CB167A82AA0C4101ED\
+        F5AD3F3898E7EB7C";
+        let Y_bn = BigInt::from_str_radix(&Y_hex, 16).unwrap();
+        let Y_vec = BigInt::to_vec(&Y_bn);
+        let Y: GE = ECPoint::from_bytes(&Y_vec[..]).unwrap();
+
+        /*
+
+        -----BEGIN EC PARAMETERS-----
+            BgUrgQQACg==
+            -----END EC PARAMETERS-----
+            -----BEGIN EC PRIVATE KEY-----
+            MHQCAQEEIH0Ia1QLbiBwu10eY365nfI0PJhgyL+OgzDiz99KdjIZoAcGBSuBBAAK
+        oUQDQgAELP9n+oNPDoHhEfJoYk8mFMGx4AupPEERdzwcJIxeqP/xMujsMEDU2mc3
+        fzN9OGbLFnqCqgxBAe31rT84mOfrfA==
+            -----END EC PRIVATE KEY-----
+        */
+        let y_hex = "7D086B540B6E2070BB5D1E637EB99DF2343C9860C8BF8E8330E2CFDF4A763219";
+        let y_bn = BigInt::from_str_radix(&y_hex, 16).unwrap();
+        let y: FE = ECScalar::from(&y_bn);
+        assert_eq!(Y.clone(), G * &y);
+
+        // encryption
+        let (segments, encryptions_secret_party1) = party_one_master_key
+            .private
+            .to_encrypted_segment(&segment_size, 32, &Y, &G);
+        // proof and verify test:
+
+        let proof = Proof::prove(&segments, &encryptions_secret_party1, &G, &Y, &segment_size);
+        let verify = proof.verify(
+            &encryptions_secret_party1,
+            &G,
+            &Y,
+            &party_two_master_key.public.p1,
+            &segment_size,
+        );
+        assert!(verify.is_ok());
+
+        // encryption
+
+        // first case: party one is dead, party two wants to recover the full key.
+        // In practice party two will recover party_one_master_key and from that point will run both logic parties locally
+        let secret_decrypted_party_one =
+            Msegmentation::decrypt(&encryptions_secret_party1, &G, &y, &segment_size);
+        let _party_one_master_key_recovered = party_two_master_key
+            .counter_master_key_from_recovered_secret(secret_decrypted_party_one.clone());
+        //  println!("master key 1 {:?}", party_one_master_key.public);
+        //  println!("master key 1 rec{:?}", _party_one_master_key_recovered.public);
+    }
 
     #[test]
     fn test_recovery_scenarios() {
