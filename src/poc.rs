@@ -122,6 +122,6 @@ mod tests {
         let secret_decrypted = Msegmentation::decrypt(&encryptions, &G, &y, &segment_size);
 
         // debug test
-        assert_eq!(ss.get_element(), secret_decrypted.get_element());
+        assert_eq!(ss.get_element(), secret_decrypted.unwrap().get_element());
     }
 }

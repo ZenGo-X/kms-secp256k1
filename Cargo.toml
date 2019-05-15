@@ -17,25 +17,29 @@ serde_derive = "1.0"
 
 [dependencies.paillier]
 git = "https://github.com/KZen-networks/rust-paillier"
+version = "0.2.1-alpha.0"
 
 [dependencies.zk-paillier]
 git = "https://github.com/KZen-networks/zk-paillier"
+version = "0.1.0"
 
 [dependencies.multi-party-schnorr]
 git = "https://github.com/KZen-networks/multi-party-schnorr"
+version = "0.1.0"
+
 
 [dependencies.curv]
 git = "https://github.com/KZen-networks/curv"
 features =  ["ec_secp256k1"]
+version = "0.1.0"
 
 [dependencies.multi-party-ecdsa]
 git = "https://github.com/KZen-networks/multi-party-ecdsa"
+version = "0.1.0"
 
 [dependencies.centipede]
 git = "https://github.com/KZen-networks/centipede"
-
-
-
+version = "0.2.0"
 
 [patch.crates-io]
 rust-gmp = { version = "0.5.0", features = ["serde_support"], git = "https://github.com/KZen-networks/rust-gmp" }
