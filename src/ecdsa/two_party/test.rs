@@ -120,13 +120,13 @@ mod tests {
         let secret_decrypted_party_one =
             Msegmentation::decrypt(&encryptions_secret_party1, &G, &y, &segment_size);
         let _party_one_master_key_recovered = party_two_master_key
-            .counter_master_key_from_recovered_secret(secret_decrypted_party_one.clone());
+            .counter_master_key_from_recovered_secret(secret_decrypted_party_one.unwrap().clone());
 
         // second case: party two wants to self-recover. public data and chain code of party two are assumed to exist locally or sent from party one
         let secret_decrypted_party_two =
             Msegmentation::decrypt(&encryptions_secret_party2, &G, &y, &segment_size);
         let _party_two_master_key_recovered = MasterKey2::recover_master_key(
-            secret_decrypted_party_two.clone(),
+            secret_decrypted_party_two.unwrap().clone(),
             party_two_master_key.public.clone(),
             party_two_master_key.chain_code.clone(),
         );
@@ -136,7 +136,7 @@ mod tests {
         let secret_decrypted_party_two =
             Msegmentation::decrypt(&encryptions_secret_party2, &G, &y, &segment_size);
         let _party_two_master_key_recovered = party_one_master_key
-            .counter_master_key_from_recovered_secret(secret_decrypted_party_two.clone());
+            .counter_master_key_from_recovered_secret(secret_decrypted_party_two.unwrap().clone());
         /*
                 assert_eq!(
                     party_two_master_key_recovered.private,
@@ -149,7 +149,7 @@ mod tests {
         let secret_decrypted_party_one =
             Msegmentation::decrypt(&encryptions_secret_party1, &G, &y, &segment_size);
         let party_one_master_key_half_recovered = MasterKey1::recover_master_key(
-            secret_decrypted_party_one.clone(),
+            secret_decrypted_party_one.unwrap().clone(),
             party_one_master_key.public.clone(),
             party_one_master_key.chain_code.clone(),
         );
