@@ -202,7 +202,7 @@ impl MasterKey1 {
     pub fn key_gen_third_message(
         party_two_pdl_first_message: &Party2PDLFirstMsg,
         party_one_private: &party_one::Party1Private,
-    ) -> (party_one::PDLFirstMessage, party_one::PDLdecommit) {
+    ) -> (party_one::PDLFirstMessage, party_one::PDLdecommit, BigInt) {
         party_one::PaillierKeyPair::pdl_first_stage(
             &party_one_private,
             &party_two_pdl_first_message,
@@ -210,18 +210,18 @@ impl MasterKey1 {
     }
 
     pub fn key_gen_fourth_message(
-        pdl_party_one_first_message: &party_one::PDLFirstMessage,
         pdl_party_two_first_message: &Party2PDLFirstMsg,
         pdl_party_two_second_message: &Party2PDLSecondMsg,
         party_one_private: party_one::Party1Private,
         pdl_decommit: party_one::PDLdecommit,
+        alpha: BigInt,
     ) -> Result<(party_one::PDLSecondMessage), ()> {
         party_one::PaillierKeyPair::pdl_second_stage(
-            pdl_party_one_first_message,
             pdl_party_two_first_message,
             pdl_party_two_second_message,
             party_one_private,
             pdl_decommit,
+            alpha,
         )
     }
 
@@ -293,7 +293,7 @@ impl MasterKey1 {
     pub fn rotation_second_message(
         rotate_party_two_message_one: &Party2PDLFirstMsg,
         party_one_private: &party_one::Party1Private,
-    ) -> (party_one::PDLFirstMessage, party_one::PDLdecommit) {
+    ) -> (party_one::PDLFirstMessage, party_one::PDLdecommit, BigInt) {
         party_one::PaillierKeyPair::pdl_first_stage(
             &party_one_private,
             &rotate_party_two_message_one,
@@ -305,17 +305,17 @@ impl MasterKey1 {
         rotation_first_message: &RotationParty1Message1,
         party_one_private_new: party_one::Party1Private,
         cf: &Rotation,
-        rotate_party_one_second_message: &party_one::PDLFirstMessage,
         rotate_party_two_first_message: &Party2PDLFirstMsg,
         rotate_party_two_second_message: &Party2PDLSecondMsg,
         pdl_decommit: party_one::PDLdecommit,
+        alpha: BigInt,
     ) -> Result<((party_one::PDLSecondMessage, MasterKey1)), ()> {
         let rotate_party_one_third_message = party_one::PaillierKeyPair::pdl_second_stage(
-            rotate_party_one_second_message,
             rotate_party_two_first_message,
             rotate_party_two_second_message,
             party_one_private_new.clone(),
             pdl_decommit,
+            alpha,
         );
         let master_key_new = self.rotate(
             cf,

@@ -647,7 +647,7 @@ mod tests {
         let (party_two_second_message, party_two_paillier, party_two_pdl_chal) =
             key_gen_second_message.unwrap();
 
-        let (party_one_third_message, party_one_pdl_decommit) = MK1L::key_gen_third_message(
+        let (party_one_third_message, party_one_pdl_decommit, alpha) = MK1L::key_gen_third_message(
             &party_two_second_message.pdl_first_message,
             &party_one_private,
         );
@@ -655,11 +655,11 @@ mod tests {
         let party_two_third_message = MK2L::key_gen_third_message(&party_two_pdl_chal);
 
         let party_one_fourth_message = MK1L::key_gen_fourth_message(
-            &party_one_third_message,
             &party_two_second_message.pdl_first_message,
             &party_two_third_message,
             party_one_private.clone(),
             party_one_pdl_decommit,
+            alpha,
         )
         .expect("pdl error party 2");
 

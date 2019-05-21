@@ -48,13 +48,13 @@ mod tests {
         let secret_decrypted_party_one =
             Msegmentation::decrypt(&encryptions_secret_party1, &G, &y, &segment_size);
         let _party_one_master_key_recovered = party_two_master_key
-            .counter_master_key_from_recovered_secret(secret_decrypted_party_one.clone());
+            .counter_master_key_from_recovered_secret(secret_decrypted_party_one.unwrap().clone());
 
         // second case: party two wants to self-recover. public data and chain code of party two are assumed to exist locally or sent from party one
         let secret_decrypted_party_two =
             Msegmentation::decrypt(&encryptions_secret_party2, &G, &y, &segment_size);
         let _party_two_master_key_recovered = MasterKey2::recover_master_key(
-            secret_decrypted_party_two.clone(),
+            secret_decrypted_party_two.unwrap().clone(),
             party_two_master_key.public.clone(),
             party_two_master_key.chain_code.clone(),
         );
@@ -64,7 +64,7 @@ mod tests {
         let secret_decrypted_party_two =
             Msegmentation::decrypt(&encryptions_secret_party2, &G, &y, &segment_size);
         let party_two_master_key_recovered = party_one_master_key
-            .counter_master_key_from_recovered_secret(secret_decrypted_party_two.clone());
+            .counter_master_key_from_recovered_secret(secret_decrypted_party_two.unwrap().clone());
         /*
         assert_eq!(
             party_two_master_key_recovered.private,
@@ -77,7 +77,7 @@ mod tests {
         let secret_decrypted_party_one =
             Msegmentation::decrypt(&encryptions_secret_party1, &G, &y, &segment_size);
         let party_one_master_key_half_recovered = MasterKey1::recover_master_key(
-            secret_decrypted_party_one.clone(),
+            secret_decrypted_party_one.unwrap().clone(),
             party_one_master_key.public.clone(),
             party_one_master_key.chain_code.clone(),
         );
@@ -99,7 +99,7 @@ mod tests {
 
         let (rotation_party_two_first_message, party_two_pdl_chal, party_two_paillier) =
             result_rotate_party_one_first_message.unwrap();
-        let (rotation_party_one_second_message, party_one_pdl_decommit) =
+        let (rotation_party_one_second_message, party_one_pdl_decommit, alpha) =
             MasterKey1::rotation_second_message(
                 &rotation_party_two_first_message,
                 &party_one_private_new,
@@ -111,10 +111,10 @@ mod tests {
                 &rotation_party_one_first_message,
                 party_one_private_new,
                 &random1,
-                &rotation_party_one_second_message,
                 &rotation_party_two_first_message,
                 &rotation_party_two_second_message,
                 party_one_pdl_decommit,
+                alpha,
             );
         assert!(result_rotate_party_two_second_message.is_ok());
         let (rotation_party_one_third_message, party_one_master_key_rotated) =
@@ -381,19 +381,20 @@ mod tests {
         let (party_two_second_message, party_two_paillier, party_two_pdl_chal) =
             key_gen_second_message.unwrap();
 
-        let (party_one_third_message, party_one_pdl_decommit) = MasterKey1::key_gen_third_message(
-            &party_two_second_message.pdl_first_message,
-            &party_one_private,
-        );
+        let (party_one_third_message, party_one_pdl_decommit, alpha) =
+            MasterKey1::key_gen_third_message(
+                &party_two_second_message.pdl_first_message,
+                &party_one_private,
+            );
 
         let party_two_third_message = MasterKey2::key_gen_third_message(&party_two_pdl_chal);
 
         let party_one_fourth_message = MasterKey1::key_gen_fourth_message(
-            &party_one_third_message,
             &party_two_second_message.pdl_first_message,
             &party_two_third_message,
             party_one_private.clone(),
             party_one_pdl_decommit,
+            alpha,
         )
         .expect("pdl error party 2");
 
@@ -475,7 +476,7 @@ mod tests {
 
         let (rotation_party_two_first_message, party_two_pdl_chal, party_two_paillier) =
             result_rotate_party_one_first_message.unwrap();
-        let (rotation_party_one_second_message, party_one_pdl_decommit) =
+        let (rotation_party_one_second_message, party_one_pdl_decommit, alpha) =
             MasterKey1::rotation_second_message(
                 &rotation_party_two_first_message,
                 &party_one_private_new,
@@ -486,10 +487,10 @@ mod tests {
             &rotation_party_one_first_message,
             party_one_private_new,
             &random1,
-            &rotation_party_one_second_message,
             &rotation_party_two_first_message,
             &rotation_party_two_second_message,
             party_one_pdl_decommit,
+            alpha,
         );
         assert!(result_rotate_party_two_second_message.is_ok());
         let (rotation_party_one_third_message, party_one_master_key_rotated) =
