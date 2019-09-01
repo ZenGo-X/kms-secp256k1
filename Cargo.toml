@@ -18,27 +18,27 @@ serde_derive = "1.0"
 
 [dependencies.paillier]
 git = "https://github.com/KZen-networks/rust-paillier"
-branch = "feature/libra-support"
+branch = "feature/libra-support-fix"
 
 [dependencies.zk-paillier]
 git = "https://github.com/KZen-networks/zk-paillier"
-branch = "feature/libra-support"
+branch = "feature/libra-support-fix"
 
 [dependencies.multi-party-schnorr]
 git = "https://github.com/KZen-networks/multi-party-schnorr"
-branch = "feature/libra-support"
+branch = "feature/libra-support-fix"
 
 [dependencies.multi-party-ecdsa]
 git = "https://github.com/KZen-networks/multi-party-ecdsa"
-branch = "feature/libra-support"
+branch = "feature/libra-support-fix"
 
 [dependencies.centipede]
 git = "https://github.com/KZen-networks/centipede"
-branch = "feature/libra-support"
+branch = "feature/libra-support-fix"
 
 [dependencies.curv]
 git = "https://github.com/KZen-networks/curv"
-branch = "feature/libra-support"
+branch = "feature/libra-support-fix"
 features =  ["ec_secp256k1"]
 
 [patch.crates-io]
