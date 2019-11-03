@@ -19,7 +19,7 @@ pub struct Rotation2 {}
 impl Rotation2 {
     pub fn key_rotate_first_message(
         party1_first_message: &coin_flip_optimal_rounds::Party1FirstMessage,
-    ) -> (coin_flip_optimal_rounds::Party2FirstMessage) {
+    ) -> coin_flip_optimal_rounds::Party2FirstMessage {
         coin_flip_optimal_rounds::Party2FirstMessage::share(&party1_first_message.proof)
     }
 

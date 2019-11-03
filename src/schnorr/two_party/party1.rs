@@ -224,7 +224,7 @@ impl KeyGen {
         received_message1: &KeyGenParty2Message1,
         received_message2: &KeyGenParty2Message2,
         e: &FE,
-    ) -> Result<(GE), Errors> {
+    ) -> Result<GE, Errors> {
         let sig2 = Signature::set_signature(&received_message1.ix_pub[1], &received_message2.y2);
         let result = verify(&received_message1.ix_pub[0], &sig2, e);
         if result.is_ok() {

@@ -215,7 +215,7 @@ impl MasterKey1 {
         party_one_private: party_one::Party1Private,
         pdl_decommit: party_one::PDLdecommit,
         alpha: BigInt,
-    ) -> Result<(party_one::PDLSecondMessage), ()> {
+    ) -> Result<party_one::PDLSecondMessage, ()> {
         party_one::PaillierKeyPair::pdl_second_stage(
             pdl_party_two_first_message,
             pdl_party_two_second_message,
@@ -309,7 +309,7 @@ impl MasterKey1 {
         rotate_party_two_second_message: &Party2PDLSecondMsg,
         pdl_decommit: party_one::PDLdecommit,
         alpha: BigInt,
-    ) -> Result<((party_one::PDLSecondMessage, MasterKey1)), ()> {
+    ) -> Result<(party_one::PDLSecondMessage, MasterKey1), ()> {
         let rotate_party_one_third_message = party_one::PaillierKeyPair::pdl_second_stage(
             rotate_party_two_first_message,
             rotate_party_two_second_message,

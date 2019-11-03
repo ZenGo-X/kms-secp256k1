@@ -70,7 +70,7 @@ mod tests {
         // encryption
         let (segments, encryptions_secret_party1) = party_one_master_key
             .private
-            .to_encrypted_segment(&segment_size, 32, &Y, &G);
+            .to_encrypted_segment(segment_size, 32, &Y, &G);
         // proof and verify test:
 
         let proof = Proof::prove(&segments, &encryptions_secret_party1, &G, &Y, &segment_size);
@@ -106,12 +106,12 @@ mod tests {
         let (_, encryptions_secret_party1) =
             party_one_master_key
                 .private
-                .to_encrypted_segment(&segment_size, 32, &Y, &G);
+                .to_encrypted_segment(segment_size, 32, &Y, &G);
         // encryption
         let (_, encryptions_secret_party2) =
             party_two_master_key
                 .private
-                .to_encrypted_segment(&segment_size, 32, &Y, &G);
+                .to_encrypted_segment(segment_size, 32, &Y, &G);
 
         // first case: party one is dead, party two wants to recover the full key.
         // In practice party two will recover party_one_master_key and from that point will run both logic parties locally
