@@ -71,13 +71,14 @@ impl MasterKey2 {
             paillier_pub: self.public.paillier_pub.clone(),
             c_key: self.public.c_key.clone(),
         };
+
         MasterKey2 {
             public,
             private: party_two::Party2Private::update_private_key(
                 &self.private,
                 &f_l_new.to_big_int(),
             ),
-            chain_code: cc_new.bytes_compressed_to_big_int(),
+            chain_code: BigInt::from(cc_new.get_element().serialize_uncompressed().as_ref()),
         }
     }
 

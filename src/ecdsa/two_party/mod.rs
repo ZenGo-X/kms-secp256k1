@@ -73,7 +73,7 @@ pub fn hd_key(
     let f_r_fe: FE = ECScalar::from(&f_r);
 
     let bn_to_slice = BigInt::to_vec(chain_code_bi);
-    let chain_code = GE::from_bytes(&bn_to_slice[1..33]).unwrap() * &f_r_fe;
+    let chain_code = GE::from_bytes(&bn_to_slice[1..65]).unwrap() * &f_r_fe;
     let pub_key = pubkey * &f_l_fe;
 
     let (public_key_new_child, f_l_new, cc_new) =

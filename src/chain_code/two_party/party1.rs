@@ -34,8 +34,8 @@ impl ChainCode1 {
         party2_first_message_public_share: &GE,
     ) -> ChainCode1 {
         ChainCode1 {
-            chain_code: compute_pubkey(ec_key_pair, party2_first_message_public_share)
-                .bytes_compressed_to_big_int(),
+            chain_code: BigInt::from(compute_pubkey(ec_key_pair, party2_first_message_public_share)
+                .pk_to_key_slice().as_slice()),
         }
     }
 }
