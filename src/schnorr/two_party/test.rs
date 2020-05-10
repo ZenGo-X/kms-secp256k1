@@ -599,5 +599,4 @@ mod tests {
             pubkey_view_party2.get_element()
         );
     }
-
 }

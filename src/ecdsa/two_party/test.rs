@@ -159,47 +159,16 @@ mod tests {
         let random2 = Rotation {
             rotation: one.clone(),
         };
+
         //rotation:
-        let (rotation_party_one_first_message, party_one_private_new) =
+        let (rotation_party_one_first_message, party_one_master_key_rotated) =
             party_one_master_key_half_recovered.rotation_first_message(&random1);
 
         let result_rotate_party_one_first_message =
             party_two_master_key.rotate_first_message(&random2, &rotation_party_one_first_message);
         assert!(result_rotate_party_one_first_message.is_ok());
 
-        let (rotation_party_two_first_message, party_two_pdl_chal, party_two_paillier) =
-            result_rotate_party_one_first_message.unwrap();
-        let (rotation_party_one_second_message, party_one_pdl_decommit, alpha) =
-            MasterKey1::rotation_second_message(
-                &rotation_party_two_first_message,
-                &party_one_private_new,
-            );
-        let rotation_party_two_second_message =
-            MasterKey2::rotate_second_message(&party_two_pdl_chal);
-        let result_rotate_party_two_second_message = party_one_master_key_half_recovered
-            .rotation_third_message(
-                &rotation_party_one_first_message,
-                party_one_private_new,
-                &random1,
-                &rotation_party_two_first_message,
-                &rotation_party_two_second_message,
-                party_one_pdl_decommit,
-                alpha,
-            );
-        assert!(result_rotate_party_two_second_message.is_ok());
-        let (rotation_party_one_third_message, party_one_master_key_rotated) =
-            result_rotate_party_two_second_message.unwrap();
-
-        let result_rotate_party_one_third_message = party_two_master_key.rotate_third_message(
-            &random2,
-            &party_two_paillier,
-            &party_two_pdl_chal,
-            &rotation_party_one_second_message,
-            &rotation_party_one_third_message,
-        );
-        assert!(result_rotate_party_one_third_message.is_ok());
-
-        let party_two_master_key_rotated = result_rotate_party_one_third_message.unwrap();
+        let party_two_master_key_rotated = result_rotate_party_one_first_message.unwrap();
 
         //test by signing:
         let message = BigInt::from(1234);
@@ -447,33 +416,7 @@ mod tests {
         );
 
         assert!(key_gen_second_message.is_ok());
-
-        let (party_two_second_message, party_two_paillier, party_two_pdl_chal) =
-            key_gen_second_message.unwrap();
-
-        let (party_one_third_message, party_one_pdl_decommit, alpha) =
-            MasterKey1::key_gen_third_message(
-                &party_two_second_message.pdl_first_message,
-                &party_one_private,
-            );
-
-        let party_two_third_message = MasterKey2::key_gen_third_message(&party_two_pdl_chal);
-
-        let party_one_fourth_message = MasterKey1::key_gen_fourth_message(
-            &party_two_second_message.pdl_first_message,
-            &party_two_third_message,
-            party_one_private.clone(),
-            party_one_pdl_decommit,
-            alpha,
-        )
-        .expect("pdl error party 2");
-
-        MasterKey2::key_gen_fourth_message(
-            &party_two_pdl_chal,
-            &party_one_third_message,
-            &party_one_fourth_message,
-        )
-        .expect("pdl error party1");
+        let party_two_paillier = key_gen_second_message.unwrap().1;
 
         // chain code
         let (cc_party_one_first_message, cc_comm_witness, cc_ec_key_pair1) =
@@ -537,46 +480,16 @@ mod tests {
         );
 
         //rotation:
-        let (rotation_party_one_first_message, party_one_private_new) =
+        let (rotation_party_one_first_message, party_one_master_key_rotated) =
             party_one_master_key.rotation_first_message(&random1);
 
-        let result_rotate_party_one_first_message =
+        let result_rotate_party_two =
             party_two_master_key.rotate_first_message(&random2, &rotation_party_one_first_message);
-        assert!(result_rotate_party_one_first_message.is_ok());
+        assert!(result_rotate_party_two.is_ok());
 
-        let (rotation_party_two_first_message, party_two_pdl_chal, party_two_paillier) =
-            result_rotate_party_one_first_message.unwrap();
-        let (rotation_party_one_second_message, party_one_pdl_decommit, alpha) =
-            MasterKey1::rotation_second_message(
-                &rotation_party_two_first_message,
-                &party_one_private_new,
-            );
-        let rotation_party_two_second_message =
-            MasterKey2::rotate_second_message(&party_two_pdl_chal);
-        let result_rotate_party_two_second_message = party_one_master_key.rotation_third_message(
-            &rotation_party_one_first_message,
-            party_one_private_new,
-            &random1,
-            &rotation_party_two_first_message,
-            &rotation_party_two_second_message,
-            party_one_pdl_decommit,
-            alpha,
-        );
-        assert!(result_rotate_party_two_second_message.is_ok());
-        let (rotation_party_one_third_message, party_one_master_key_rotated) =
-            result_rotate_party_two_second_message.unwrap();
-
-        let result_rotate_party_one_third_message = party_two_master_key.rotate_third_message(
-            &random2,
-            &party_two_paillier,
-            &party_two_pdl_chal,
-            &rotation_party_one_second_message,
-            &rotation_party_one_third_message,
-        );
-        assert!(result_rotate_party_one_third_message.is_ok());
-
-        let party_two_master_key_rotated = result_rotate_party_one_third_message.unwrap();
-
-        (party_one_master_key_rotated, party_two_master_key_rotated)
+        (
+            party_one_master_key_rotated,
+            result_rotate_party_two.unwrap(),
+        )
     }
 }

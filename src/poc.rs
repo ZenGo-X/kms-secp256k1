@@ -78,9 +78,9 @@ mod tests {
             EcdsaMasterKey1::key_gen_first_message();
         let (kg_party_two_first_message, _kg_ec_key_pair_party2) =
             EcdsaMasterKey2::key_gen_first_message();
-        let (kg_party_one_second_message, _paillier_key_pair, party_one_private) =
+        let (kg_party_one_second_message, _party_one_paillier_key_pair, _party_one_private) =
             EcdsaMasterKey1::key_gen_second_message(
-                kg_comm_witness,
+                kg_comm_witness.clone(),
                 &kg_ec_key_pair_party1,
                 &kg_party_two_first_message.d_log_proof,
             );
@@ -89,35 +89,7 @@ mod tests {
             &kg_party_one_first_message,
             &kg_party_one_second_message,
         );
-
         assert!(key_gen_second_message.is_ok());
-
-        let (party_two_second_message, _party_two_paillier, party_two_pdl_chal) =
-            key_gen_second_message.unwrap();
-
-        let (party_one_third_message, party_one_pdl_commit, alpha) =
-            EcdsaMasterKey1::key_gen_third_message(
-                &party_two_second_message.pdl_first_message,
-                &party_one_private,
-            );
-
-        let party_two_third_message = EcdsaMasterKey2::key_gen_third_message(&party_two_pdl_chal);
-
-        let party_one_fourth_message = EcdsaMasterKey1::key_gen_fourth_message(
-            &party_two_second_message.pdl_first_message,
-            &party_two_third_message,
-            party_one_private,
-            party_one_pdl_commit,
-            alpha,
-        )
-        .expect("pdl error party 2");
-
-        EcdsaMasterKey2::key_gen_fourth_message(
-            &party_two_pdl_chal,
-            &party_one_third_message,
-            &party_one_fourth_message,
-        )
-        .expect("pdl error party1");
         // recovery party two:
         let secret_decrypted = Msegmentation::decrypt(&encryptions, &G, &y, &segment_size);
 
