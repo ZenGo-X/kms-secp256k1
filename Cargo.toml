@@ -1,6 +1,6 @@
 [package]
 name = "kms"
-version = "0.2.1"
+version = "0.2.2"
 authors = [
     "Omer <omer@kzencorp.com>",
     "Gary <gary@kzencorp.com>"
@@ -34,7 +34,7 @@ tag = "v0.2.3"
 
 [dependencies.multi-party-ecdsa]
 git = "https://github.com/KZen-networks/multi-party-ecdsa"
-branch ="alternative_lindell_2p"
+rev = "0a4931b8247b2f187dcb9ff7c7c096444feadcc3"
 
 [dependencies.centipede]
 git = "https://github.com/KZen-networks/centipede"
