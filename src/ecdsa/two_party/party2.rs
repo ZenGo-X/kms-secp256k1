@@ -10,7 +10,8 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
-use curv::{BigInt, FE, GE};
+use curv::BigInt;
+use curv::elliptic::curves::secp256_k1::{FE, GE};
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one::EphKeyGenFirstMsg as Party1EphKeyGenFirstMsg;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one::KeyGenFirstMsg as Party1KeyGenFirstMsg;
 
@@ -157,6 +158,7 @@ impl MasterKey2 {
     pub fn key_gen_second_message(
         party_one_first_message: &Party1KeyGenFirstMsg,
         party_one_second_message: &KeyGenParty1Message2,
+        party_one_second_message_salt: &[u8]
     ) -> Result<(Party2SecondMessage, party_two::PaillierPublic), ()> {
         let paillier_encryption_key = party_one_second_message.ek.clone();
         let paillier_encrypted_share = party_one_second_message.c_key.clone();
@@ -185,7 +187,7 @@ impl MasterKey2 {
 
         let correct_key_verify = party_one_second_message
             .correct_key_proof
-            .verify(&party_two_paillier.ek);
+            .verify(&party_two_paillier.ek, party_one_second_message_salt);
 
         match pdl_verify {
             Ok(_proof) => match correct_key_verify {
@@ -246,6 +248,7 @@ impl MasterKey2 {
         self,
         cf: &Rotation,
         party_one_rotation_first_message: &RotationParty1Message1,
+        party_one_rotation_first_message_salt: &[u8]
     ) -> Result<MasterKey2, ()> {
         let party_two_paillier = party_two::PaillierPublic {
             ek: party_one_rotation_first_message.ek.clone(),
@@ -262,7 +265,7 @@ impl MasterKey2 {
 
         let correct_key_verify = party_one_rotation_first_message
             .correct_key_proof
-            .verify(&party_two_paillier.ek);
+            .verify(&party_two_paillier.ek, party_one_rotation_first_message_salt);
 
         let master_key = self.rotate(cf, &party_two_paillier);
 

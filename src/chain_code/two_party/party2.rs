@@ -13,7 +13,8 @@
 use curv::cryptographic_primitives::proofs::ProofError;
 use curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::*;
 use curv::elliptic::curves::traits::ECPoint;
-use curv::{BigInt, GE};
+use curv::BigInt;
+use curv::elliptic::curves::secp256_k1::GE;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ChainCode2 {
@@ -21,13 +22,13 @@ pub struct ChainCode2 {
 }
 
 impl ChainCode2 {
-    pub fn chain_code_first_message() -> (Party2FirstMessage, EcKeyPair) {
+    pub fn chain_code_first_message() -> (Party2FirstMessage<GE>, EcKeyPair<GE>) {
         Party2FirstMessage::create()
     }
 
     pub fn chain_code_second_message(
         party_one_first_message: &Party1FirstMessage,
-        party_one_second_message: &Party1SecondMessage,
+        party_one_second_message: &Party1SecondMessage<GE>,
     ) -> Result<Party2SecondMessage, ProofError> {
         Party2SecondMessage::verify_commitments_and_dlog_proof(
             &party_one_first_message,
@@ -36,7 +37,7 @@ impl ChainCode2 {
     }
 
     pub fn compute_chain_code(
-        ec_key_pair: &EcKeyPair,
+        ec_key_pair: &EcKeyPair<GE>,
         party1_second_message_public_share: &GE,
     ) -> ChainCode2 {
         ChainCode2 {

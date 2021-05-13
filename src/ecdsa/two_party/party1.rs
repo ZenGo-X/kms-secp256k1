@@ -12,7 +12,8 @@
 use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use curv::elliptic::curves::traits::ECPoint;
 use curv::elliptic::curves::traits::ECScalar;
-use curv::{BigInt, FE, GE};
+use curv::BigInt;
+use curv::elliptic::curves::secp256_k1::{FE, GE};
 
 use super::hd_key;
 use super::{MasterKey1, MasterKey2, Party1Public};
@@ -169,7 +170,7 @@ impl MasterKey1 {
     pub fn key_gen_second_message(
         comm_witness: party_one::CommWitness,
         ec_key_pair_party1: &party_one::EcKeyPair,
-        proof: &DLogProof,
+        proof: &DLogProof<GE>,
     ) -> (
         KeyGenParty1Message2,
         party_one::PaillierKeyPair,
