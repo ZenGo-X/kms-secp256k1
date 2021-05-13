@@ -12,7 +12,8 @@
 use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::*;
 use curv::elliptic::curves::traits::ECPoint;
-use curv::{BigInt, GE};
+use curv::BigInt;
+use curv::elliptic::curves::secp256_k1::GE;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ChainCode1 {
@@ -20,17 +21,17 @@ pub struct ChainCode1 {
 }
 
 impl ChainCode1 {
-    pub fn chain_code_first_message() -> (Party1FirstMessage, CommWitness, EcKeyPair) {
+    pub fn chain_code_first_message() -> (Party1FirstMessage, CommWitness<GE>, EcKeyPair<GE>) {
         Party1FirstMessage::create_commitments()
     }
     pub fn chain_code_second_message(
-        comm_witness: CommWitness,
-        proof: &DLogProof,
-    ) -> Party1SecondMessage {
+        comm_witness: CommWitness<GE>,
+        proof: &DLogProof<GE>,
+    ) -> Party1SecondMessage<GE> {
         Party1SecondMessage::verify_and_decommit(comm_witness, proof).expect("")
     }
     pub fn compute_chain_code(
-        ec_key_pair: &EcKeyPair,
+        ec_key_pair: &EcKeyPair<GE>,
         party2_first_message_public_share: &GE,
     ) -> ChainCode1 {
         ChainCode1 {

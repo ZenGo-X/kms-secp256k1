@@ -14,7 +14,9 @@ use curv::arithmetic::traits::Converter;
 use curv::cryptographic_primitives::hashing::hmac_sha512;
 use curv::cryptographic_primitives::hashing::traits::KeyedHash;
 use curv::elliptic::curves::traits::{ECPoint, ECScalar};
-use curv::{BigInt, FE, GE};
+use curv::BigInt;
+use curv::arithmetic::{BasicOps, One};
+use curv::elliptic::curves::secp256_k1::{FE, GE};
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one, party_two};
 use paillier::*;
 
@@ -72,7 +74,7 @@ pub fn hd_key(
     let f_l_fe: FE = ECScalar::from(&f_l);
     let f_r_fe: FE = ECScalar::from(&f_r);
 
-    let bn_to_slice = BigInt::to_vec(chain_code_bi);
+    let bn_to_slice = BigInt::to_bytes(chain_code_bi);
     let chain_code = GE::from_bytes(&bn_to_slice[1..33]).unwrap() * &f_r_fe;
     let pub_key = pubkey * &f_l_fe;
 

@@ -23,7 +23,8 @@ mod tests {
     use chain_code::two_party::party2::ChainCode2;
     use curv::elliptic::curves::traits::ECPoint;
     use curv::elliptic::curves::traits::ECScalar;
-    use curv::{BigInt, FE, GE};
+    use curv::BigInt;
+    use curv::elliptic::curves::secp256_k1::{FE, GE};
     use rotation::two_party::party1::Rotation1;
     use rotation::two_party::party2::Rotation2;
     use schnorr::two_party::{party1, party2};

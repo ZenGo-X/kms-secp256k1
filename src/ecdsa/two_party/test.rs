@@ -20,7 +20,9 @@ mod tests {
     use chain_code::two_party::party2;
     use curv::arithmetic::traits::Converter;
     use curv::elliptic::curves::traits::{ECPoint, ECScalar};
-    use curv::{BigInt, FE, GE};
+    use curv::BigInt;
+    use curv::arithmetic::One;
+    use curv::elliptic::curves::secp256_k1::{FE, GE};
     use rotation::two_party::party1::Rotation1;
     use rotation::two_party::party2::Rotation2;
     use rotation::two_party::Rotation;
@@ -48,7 +50,7 @@ mod tests {
         let Y_hex = "2CFF67FA834F0E81E111F268624F2614C1B1E00BA93C4111773C1C248C5EA8FFF132E8EC3040D4DA67377F337D3866CB167A82AA0C4101ED\
         F5AD3F3898E7EB7C";
         let Y_bn = BigInt::from_str_radix(&Y_hex, 16).unwrap();
-        let Y_vec = BigInt::to_vec(&Y_bn);
+        let Y_vec = BigInt::to_bytes(&Y_bn);
         let Y: GE = ECPoint::from_bytes(&Y_vec[..]).unwrap();
 
         /*

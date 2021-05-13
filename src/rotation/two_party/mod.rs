@@ -10,7 +10,7 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
-use curv::FE;
+use curv::elliptic::curves::secp256_k1::FE;
 
 pub mod party1;
 pub mod party2;

@@ -10,7 +10,8 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
-use curv::{BigInt, FE, GE};
+use curv::BigInt;
+use curv::elliptic::curves::secp256_k1::{FE, GE};
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one::EphKeyGenFirstMsg as Party1EphKeyGenFirstMsg;
 use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::party_one::KeyGenFirstMsg as Party1KeyGenFirstMsg;
 
