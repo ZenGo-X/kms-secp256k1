@@ -26,6 +26,7 @@ mod tests {
     use ecdsa::two_party::MasterKey2 as EcdsaMasterKey2;
     use schnorr::two_party::party1;
     use schnorr::two_party::party2;
+    use zk_paillier::zkproofs::SALT_STRING;
 
     #[test]
     fn poc_schnorr_ecdsa() {
@@ -88,6 +89,7 @@ mod tests {
         let key_gen_second_message = EcdsaMasterKey2::key_gen_second_message(
             &kg_party_one_first_message,
             &kg_party_one_second_message,
+            SALT_STRING,
         );
         assert!(key_gen_second_message.is_ok());
         // recovery party two:

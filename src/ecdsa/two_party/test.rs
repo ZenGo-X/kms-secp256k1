@@ -26,6 +26,7 @@ mod tests {
     use rotation::two_party::party1::Rotation1;
     use rotation::two_party::party2::Rotation2;
     use rotation::two_party::Rotation;
+    use zk_paillier::zkproofs::SALT_STRING;
 
     #[test]
     fn test_recovery_from_openssl() {
@@ -167,7 +168,7 @@ mod tests {
             party_one_master_key_half_recovered.rotation_first_message(&random1);
 
         let result_rotate_party_one_first_message =
-            party_two_master_key.rotate_first_message(&random2, &rotation_party_one_first_message);
+            party_two_master_key.rotate_first_message(&random2, &rotation_party_one_first_message, SALT_STRING);
         assert!(result_rotate_party_one_first_message.is_ok());
 
         let party_two_master_key_rotated = result_rotate_party_one_first_message.unwrap();
@@ -415,6 +416,7 @@ mod tests {
         let key_gen_second_message = MasterKey2::key_gen_second_message(
             &kg_party_one_first_message,
             &kg_party_one_second_message,
+            SALT_STRING
         );
 
         assert!(key_gen_second_message.is_ok());
@@ -486,7 +488,7 @@ mod tests {
             party_one_master_key.rotation_first_message(&random1);
 
         let result_rotate_party_two =
-            party_two_master_key.rotate_first_message(&random2, &rotation_party_one_first_message);
+            party_two_master_key.rotate_first_message(&random2, &rotation_party_one_first_message, SALT_STRING);
         assert!(result_rotate_party_two.is_ok());
 
         (
