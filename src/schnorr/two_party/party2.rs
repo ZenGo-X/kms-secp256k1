@@ -18,10 +18,10 @@ use super::hd_key;
 use super::{MasterKey1, MasterKey2};
 use chain_code::two_party::party1::ChainCode1;
 use chain_code::two_party::party2::ChainCode2;
-use curv::arithmetic::traits::Converter;
-use curv::elliptic::curves::traits::ECPoint;
-use curv::elliptic::curves::traits::ECScalar;
-use curv::{BigInt, FE, GE};
+use two_party_ecdsa::curv::arithmetic::traits::Converter;
+use two_party_ecdsa::curv::elliptic::curves::traits::ECPoint;
+use two_party_ecdsa::curv::elliptic::curves::traits::ECScalar;
+use two_party_ecdsa::curv::{BigInt, FE, GE};
 use multi_party_schnorr::protocols::multisig::*;
 use rotation::two_party::Rotation;
 use schnorr::two_party::party1::{

@@ -16,11 +16,11 @@
 
 use chain_code::two_party::party1::ChainCode1;
 use chain_code::two_party::party2::ChainCode2;
-use curv::arithmetic::traits::Converter;
-use curv::cryptographic_primitives::hashing::hmac_sha512;
-use curv::cryptographic_primitives::hashing::traits::KeyedHash;
-use curv::elliptic::curves::traits::{ECPoint, ECScalar};
-use curv::{BigInt, FE, GE};
+use two_party_ecdsa::curv::arithmetic::traits::Converter;
+use two_party_ecdsa::curv::cryptographic_primitives::hashing::hmac_sha512;
+use two_party_ecdsa::curv::cryptographic_primitives::hashing::traits::KeyedHash;
+use two_party_ecdsa::curv::elliptic::curves::traits::{ECPoint, ECScalar};
+use two_party_ecdsa::curv::{BigInt, FE, GE};
 use multi_party_schnorr::protocols::multisig::KeyPair;
 // since this special case requires two out of two signers we ignore the "accountable" property
 
@@ -45,7 +45,7 @@ pub fn hd_key(
     pubkey: &GE,
     chain_code_bi: &BigInt,
 ) -> (GE, FE, GE) {
-    let mask = BigInt::from(2).pow(256) - BigInt::one();
+    let mask = BigInt::from(2i32).pow(256) - BigInt::one();
 
     // calc first element:
     let first = location_in_hir.remove(0);

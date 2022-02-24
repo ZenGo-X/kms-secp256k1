@@ -10,13 +10,13 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
-use curv::arithmetic::traits::Converter;
-use curv::cryptographic_primitives::hashing::hmac_sha512;
-use curv::cryptographic_primitives::hashing::traits::KeyedHash;
-use curv::elliptic::curves::traits::{ECPoint, ECScalar};
-use curv::{BigInt, FE, GE};
-use multi_party_ecdsa::protocols::two_party_ecdsa::lindell_2017::{party_one, party_two};
-use paillier::*;
+use two_party_ecdsa::curv::arithmetic::traits::Converter;
+use two_party_ecdsa::curv::cryptographic_primitives::hashing::hmac_sha512;
+use two_party_ecdsa::curv::cryptographic_primitives::hashing::traits::KeyedHash;
+use two_party_ecdsa::curv::elliptic::curves::traits::{ECPoint, ECScalar};
+use two_party_ecdsa::curv::{BigInt, FE, GE};
+use two_party_ecdsa::paillier::*;
+use two_party_ecdsa::{party_one, party_two};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Party1Public {
@@ -60,7 +60,7 @@ pub fn hd_key(
     pubkey: &GE,
     chain_code_bi: &BigInt,
 ) -> (GE, FE, GE) {
-    let mask = BigInt::from(2).pow(256) - BigInt::one();
+    let mask = BigInt::from(2i32).pow(256) - BigInt::one();
     // let public_key = self.public.q.clone();
 
     // calc first element:
