@@ -10,17 +10,17 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
-use two_party_ecdsa::curv::{BigInt, FE, GE};
-use two_party_ecdsa::party_one::EphKeyGenFirstMsg as Party1EphKeyGenFirstMsg;
-use two_party_ecdsa::party_one::KeyGenFirstMsg as Party1KeyGenFirstMsg;
+use super::{hd_key, party1::KeyGenParty1Message2, MasterKey1, MasterKey2, Party2Public};
 
-use super::party1::KeyGenParty1Message2;
+use serde::{Deserialize, Serialize};
+use two_party_ecdsa::curv::{
+    elliptic::curves::traits::{ECPoint, ECScalar},
+    BigInt, FE, GE,
+};
+use two_party_ecdsa::party_one::{
+    EphKeyGenFirstMsg as Party1EphKeyGenFirstMsg, KeyGenFirstMsg as Party1KeyGenFirstMsg,
+};
 use two_party_ecdsa::{party_one, party_two};
-
-use super::hd_key;
-use super::{MasterKey1, MasterKey2, Party2Public};
-use two_party_ecdsa::curv::elliptic::curves::traits::ECPoint;
-use two_party_ecdsa::curv::elliptic::curves::traits::ECScalar;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SignMessage {
@@ -40,8 +40,8 @@ impl MasterKey2 {
 
         let public = Party2Public {
             q: public_key_new_child,
-            p2: self.public.p2.clone() * &f_l_new,
-            p1: self.public.p1.clone(),
+            p2: self.public.p2 * f_l_new,
+            p1: self.public.p1,
             paillier_pub: self.public.paillier_pub.clone(),
             c_key: self.public.c_key.clone(),
         };
@@ -63,12 +63,12 @@ impl MasterKey2 {
     ) -> MasterKey2 {
         let party2_public = Party2Public {
             q: party_two::compute_pubkey(ec_key_pair_party2, party1_second_message_public_share),
-            p2: ec_key_pair_party2.public_share.clone(),
-            p1: party1_second_message_public_share.clone(),
+            p2: ec_key_pair_party2.public_share,
+            p1: *party1_second_message_public_share,
             paillier_pub: paillier_public.ek.clone(),
             c_key: paillier_public.encrypted_secret_share.clone(),
         };
-        let party2_private = party_two::Party2Private::set_private_key(&ec_key_pair_party2);
+        let party2_private = party_two::Party2Private::set_private_key(ec_key_pair_party2);
         MasterKey2 {
             public: party2_public,
             private: party2_private,
@@ -109,13 +109,13 @@ impl MasterKey2 {
 
         let party_two_second_message =
             party_two::KeyGenSecondMsg::verify_commitments_and_dlog_proof(
-                &party_one_first_message,
+                party_one_first_message,
                 &party_one_second_message.ecdh_second_message,
             );
 
         let party_two_paillier = party_two::PaillierPublic {
-            ek: paillier_encryption_key.clone(),
-            encrypted_secret_share: paillier_encrypted_share.clone(),
+            ek: paillier_encryption_key,
+            encrypted_secret_share: paillier_encrypted_share,
         };
 
         let range_proof_verify = party_two::PaillierPublic::verify_range_proof(
@@ -163,7 +163,7 @@ impl MasterKey2 {
             &self.public.paillier_pub,
             &self.public.c_key,
             &self.private,
-            &ec_key_pair_party2,
+            ec_key_pair_party2,
             &eph_party1_first_message.public_share,
             message,
         );

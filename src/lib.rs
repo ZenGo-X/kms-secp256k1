@@ -13,15 +13,9 @@
 
     @license GPL-3.0+ <https://github.com/KZen-networks/kmd/blob/master/LICENSE>
 */
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-
-extern crate two_party_ecdsa;
 
 pub mod chain_code;
 pub mod ecdsa;
-// pub mod schnorr;
 
 pub mod poc;
 

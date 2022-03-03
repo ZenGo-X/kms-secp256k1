@@ -9,10 +9,15 @@
     version 3 of the License, or (at your option) any later version.
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
-use two_party_ecdsa::curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
-use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::*;
-use two_party_ecdsa::curv::elliptic::curves::traits::ECPoint;
-use two_party_ecdsa::curv::{BigInt, GE};
+
+use serde::{Deserialize, Serialize};
+use two_party_ecdsa::curv::cryptographic_primitives::{
+    proofs::sigma_dlog::DLogProof,
+    twoparty::dh_key_exchange_variant_with_pok_comm::{
+        compute_pubkey, CommWitness, EcKeyPair, Party1FirstMessage, Party1SecondMessage,
+    },
+};
+use two_party_ecdsa::curv::{elliptic::curves::traits::ECPoint, BigInt, GE};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ChainCode1 {

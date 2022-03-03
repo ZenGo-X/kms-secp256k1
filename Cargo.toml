@@ -6,12 +6,9 @@ authors = [
     "Gary <gary@kzencorp.com>",
     "Oded Leiba <oded@kzencorp.com>"
 ]
-
-[lib]
-crate-type = ["lib"]
+edition = "2021"
 
 [dependencies]
-rand = "0.6"
-serde = "1.0"
-serde_derive = "1.0"
+rand = "0.8"
+serde = { version = "1", features = ["derive"] }
 two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git" }

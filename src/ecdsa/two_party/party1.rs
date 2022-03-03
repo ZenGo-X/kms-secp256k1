@@ -10,17 +10,20 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 use two_party_ecdsa::curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
-use two_party_ecdsa::curv::elliptic::curves::traits::ECPoint;
-use two_party_ecdsa::curv::{BigInt, FE, GE};
+use two_party_ecdsa::curv::{elliptic::curves::traits::ECPoint, BigInt, FE, GE};
+use two_party_ecdsa::zk_paillier::zkproofs::{NICorrectKeyProof, RangeProofNi};
+use two_party_ecdsa::{
+    party_one,
+    party_two::{self, EphKeyGenFirstMsg},
+    EncryptionKey,
+};
 
 use super::hd_key;
+use super::party2::SignMessage;
 use super::{MasterKey1, MasterKey2, Party1Public};
-use ecdsa::two_party::party2::SignMessage;
-use two_party_ecdsa::party_two::EphKeyGenFirstMsg;
-use two_party_ecdsa::zk_paillier::zkproofs::{NICorrectKeyProof, RangeProofNi};
-use two_party_ecdsa::EncryptionKey;
-use two_party_ecdsa::{party_one, party_two};
-use Errors::{self, SignError};
+use crate::Errors::{self, SignError};
+
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct KeyGenParty1Message2 {
@@ -38,8 +41,8 @@ impl MasterKey1 {
 
         let public = Party1Public {
             q: public_key_new_child,
-            p1: self.public.p1.clone(),
-            p2: self.public.p2.clone() * &f_l_new,
+            p1: self.public.p1,
+            p2: self.public.p2 * f_l_new,
             paillier_pub: self.public.paillier_pub.clone(),
             c_key: self.public.c_key.clone(),
         };
@@ -59,10 +62,10 @@ impl MasterKey1 {
     ) -> MasterKey1 {
         let party1_public = Party1Public {
             q: party_one::compute_pubkey(&party_one_private, party2_first_message_public_share),
-            p1: party_one_public_ec_key.clone(),
-            p2: party2_first_message_public_share.clone(),
+            p1: *party_one_public_ec_key,
+            p2: *party2_first_message_public_share,
             paillier_pub: paillier_key_pair.ek.clone(),
-            c_key: paillier_key_pair.encrypted_share.clone(),
+            c_key: paillier_key_pair.encrypted_share,
         };
 
         MasterKey1 {
@@ -109,11 +112,11 @@ impl MasterKey1 {
             party_one::KeyGenSecondMsg::verify_and_decommit(comm_witness, proof).expect("");
 
         let paillier_key_pair =
-            party_one::PaillierKeyPair::generate_keypair_and_encrypted_share(&ec_key_pair_party1);
+            party_one::PaillierKeyPair::generate_keypair_and_encrypted_share(ec_key_pair_party1);
 
         // party one set her private key:
         let party_one_private =
-            party_one::Party1Private::set_private_key(&ec_key_pair_party1, &paillier_key_pair);
+            party_one::Party1Private::set_private_key(ec_key_pair_party1, &paillier_key_pair);
 
         let range_proof = party_one::PaillierKeyPair::generate_range_proof(
             &paillier_key_pair,
@@ -147,7 +150,7 @@ impl MasterKey1 {
     ) -> Result<party_one::SignatureRecid, Errors> {
         let verify_party_two_second_message =
             party_one::EphKeyGenSecondMsg::verify_commitments_and_dlog_proof(
-                &eph_key_gen_first_message_party_two,
+                eph_key_gen_first_message_party_two,
                 &party_two_sign_message.second_message,
             )
             .is_ok();
@@ -155,7 +158,7 @@ impl MasterKey1 {
         let signature_with_recid = party_one::Signature::compute_with_recid(
             &self.private,
             &party_two_sign_message.partial_sig.c3,
-            &eph_ec_key_pair_party1,
+            eph_ec_key_pair_party1,
             &party_two_sign_message
                 .second_message
                 .comm_witness

@@ -10,10 +10,15 @@
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
 
-use two_party_ecdsa::curv::cryptographic_primitives::proofs::ProofError;
-use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::*;
-use two_party_ecdsa::curv::elliptic::curves::traits::ECPoint;
-use two_party_ecdsa::curv::{BigInt, GE};
+use serde::{Deserialize, Serialize};
+use two_party_ecdsa::curv::cryptographic_primitives::{
+    proofs::ProofError,
+    twoparty::dh_key_exchange_variant_with_pok_comm::{
+        compute_pubkey, EcKeyPair, Party1FirstMessage, Party1SecondMessage, Party2FirstMessage,
+        Party2SecondMessage,
+    },
+};
+use two_party_ecdsa::curv::{elliptic::curves::traits::ECPoint, BigInt, GE};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ChainCode2 {
@@ -30,8 +35,8 @@ impl ChainCode2 {
         party_one_second_message: &Party1SecondMessage,
     ) -> Result<Party2SecondMessage, ProofError> {
         Party2SecondMessage::verify_commitments_and_dlog_proof(
-            &party_one_first_message,
-            &party_one_second_message,
+            party_one_first_message,
+            party_one_second_message,
         )
     }
 
