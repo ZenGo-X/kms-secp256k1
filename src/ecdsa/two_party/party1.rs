@@ -9,19 +9,21 @@
     version 3 of the License, or (at your option) any later version.
     @license GPL-3.0+ <https://github.com/KZen-networks/kms/blob/master/LICENSE>
 */
+use super::hd_key;
+use super::party2::SignMessage;
+use super::{MasterKey1, MasterKey2, Party1Public};
+use crate::Errors::{self, SignError};
 use two_party_ecdsa::curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use two_party_ecdsa::curv::{elliptic::curves::traits::ECPoint, BigInt, FE, GE};
+use two_party_ecdsa::party_two::{
+    PDLFirstMessage as Party2PDLFirstMsg, PDLSecondMessage as Party2PDLSecondMsg,
+};
 use two_party_ecdsa::zk_paillier::zkproofs::{NICorrectKeyProof, RangeProofNi};
 use two_party_ecdsa::{
     party_one,
     party_two::{self, EphKeyGenFirstMsg},
     EncryptionKey,
 };
-
-use super::hd_key;
-use super::party2::SignMessage;
-use super::{MasterKey1, MasterKey2, Party1Public};
-use crate::Errors::{self, SignError};
 
 use serde::{Deserialize, Serialize};
 
@@ -182,5 +184,31 @@ impl MasterKey1 {
         } else {
             Err(SignError)
         }
+    }
+
+    pub fn key_gen_third_message(
+        party_two_pdl_first_message: &Party2PDLFirstMsg,
+        party_one_private: &party_one::Party1Private,
+    ) -> (party_one::PDLFirstMessage, party_one::PDLdecommit, BigInt) {
+        party_one::PaillierKeyPair::pdl_first_stage(
+            &party_one_private,
+            &party_two_pdl_first_message,
+        )
+    }
+
+    pub fn key_gen_fourth_message(
+        pdl_party_two_first_message: &Party2PDLFirstMsg,
+        pdl_party_two_second_message: &Party2PDLSecondMsg,
+        party_one_private: party_one::Party1Private,
+        pdl_decommit: party_one::PDLdecommit,
+        alpha: BigInt,
+    ) -> Result<(party_one::PDLSecondMessage), ()> {
+        party_one::PaillierKeyPair::pdl_second_stage(
+            pdl_party_two_first_message,
+            pdl_party_two_second_message,
+            party_one_private,
+            pdl_decommit,
+            alpha,
+        )
     }
 }
