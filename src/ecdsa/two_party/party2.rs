@@ -19,6 +19,7 @@ use two_party_ecdsa::curv::{
 };
 use two_party_ecdsa::party_one::{
     EphKeyGenFirstMsg as Party1EphKeyGenFirstMsg, KeyGenFirstMsg as Party1KeyGenFirstMsg,
+    PDLFirstMessage as Party1PDLFirstMsg, PDLSecondMessage as Party1PDLSecondMsg,
 };
 use two_party_ecdsa::{party_one, party_two};
 
@@ -166,6 +167,18 @@ impl MasterKey2 {
         pdl_chal: &party_two::PDLchallenge,
     ) -> party_two::PDLSecondMessage {
         party_two::PaillierPublic::pdl_decommit_c_tag_tag(&pdl_chal)
+    }
+
+    pub fn key_gen_fourth_message(
+        pdl_chal: &party_two::PDLchallenge,
+        party_one_pdl_first_message: &Party1PDLFirstMsg,
+        party_one_pdl_second_message: &Party1PDLSecondMsg,
+    ) -> Result<(), ()> {
+        party_two::PaillierPublic::verify_pdl(
+            pdl_chal,
+            party_one_pdl_first_message,
+            party_one_pdl_second_message,
+        )
     }
 
     pub fn sign_first_message() -> (
