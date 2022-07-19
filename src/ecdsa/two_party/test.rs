@@ -375,7 +375,7 @@ pub fn test_key_gen() -> (MasterKey1, MasterKey2) {
 
     assert!(key_gen_second_message.is_ok());
 
-    let party_two_paillier = key_gen_second_message.unwrap();
+    let (_, party_two_paillier, _) = key_gen_second_message.unwrap();
 
     // chain code
     let (cc_party_one_first_message, cc_comm_witness, cc_ec_key_pair1) =

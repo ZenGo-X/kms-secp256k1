@@ -29,8 +29,10 @@ pub struct SignMessage {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+
 pub struct Party2SecondMessage {
     pub key_gen_second_message: party_two::KeyGenSecondMsg,
+    pub pdl_first_message: party_two::PDLFirstMessage,
 }
 
 impl MasterKey2 {
@@ -103,24 +105,38 @@ impl MasterKey2 {
     pub fn key_gen_second_message(
         party_one_first_message: &Party1KeyGenFirstMsg,
         party_one_second_message: &KeyGenParty1Message2,
-    ) -> Result<party_two::PaillierPublic, ()> {
+    ) -> Result<
+        (
+            Party2SecondMessage,
+            party_two::PaillierPublic,
+            party_two::PDLchallenge,
+        ),
+        (),
+    > {
         let paillier_encryption_key = party_one_second_message.ek.clone();
         let paillier_encrypted_share = party_one_second_message.c_key.clone();
 
         let party_two_second_message =
             party_two::KeyGenSecondMsg::verify_commitments_and_dlog_proof(
-                party_one_first_message,
+                &party_one_first_message,
                 &party_one_second_message.ecdh_second_message,
             );
 
         let party_two_paillier = party_two::PaillierPublic {
-            ek: paillier_encryption_key,
-            encrypted_secret_share: paillier_encrypted_share,
+            ek: paillier_encryption_key.clone(),
+            encrypted_secret_share: paillier_encrypted_share.clone(),
         };
 
         let range_proof_verify = party_two::PaillierPublic::verify_range_proof(
             &party_two_paillier,
             &party_one_second_message.range_proof,
+        );
+
+        let (pdl_first_message, pdl_chal) = party_two_paillier.pdl_challenge(
+            &party_one_second_message
+                .ecdh_second_message
+                .comm_witness
+                .public_share,
         );
 
         let correct_key_verify = party_one_second_message
@@ -130,7 +146,14 @@ impl MasterKey2 {
         match range_proof_verify {
             Ok(_proof) => match correct_key_verify {
                 Ok(_proof) => match party_two_second_message {
-                    Ok(_) => Ok(party_two_paillier),
+                    Ok(t) => Ok((
+                        Party2SecondMessage {
+                            key_gen_second_message: t,
+                            pdl_first_message,
+                        },
+                        party_two_paillier,
+                        pdl_chal,
+                    )),
                     Err(_verify_com_and_dlog_party_one) => Err(()),
                 },
                 Err(_correct_key_error) => Err(()),
