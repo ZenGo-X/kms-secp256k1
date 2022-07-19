@@ -162,6 +162,12 @@ impl MasterKey2 {
         }
     }
 
+    pub fn key_gen_third_message(
+        pdl_chal: &party_two::PDLchallenge,
+    ) -> party_two::PDLSecondMessage {
+        party_two::PaillierPublic::pdl_decommit_c_tag_tag(&pdl_chal)
+    }
+
     pub fn sign_first_message() -> (
         party_two::EphKeyGenFirstMsg,
         party_two::EphCommWitness,
