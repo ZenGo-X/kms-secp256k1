@@ -155,7 +155,7 @@ impl MasterKey1 {
                 eph_key_gen_first_message_party_two,
                 &party_two_sign_message.second_message,
             )
-            .is_ok();
+                .is_ok();
 
         let signature_with_recid = party_one::Signature::compute_with_recid(
             &self.private,
@@ -173,8 +173,6 @@ impl MasterKey1 {
             r: signature_with_recid.r.clone(),
             s: signature_with_recid.s.clone(),
         };
-        println!("sig_r: {}", signature.r);
-        println!("sig_s: {}", signature.s);
 
 
         let verify = party_one::verify(&signature, &self.public.q, message).is_ok();
@@ -182,9 +180,16 @@ impl MasterKey1 {
             if verify_party_two_second_message {
                 Ok(signature_with_recid)
             } else {
+                println!("Invalid commitments:{:?}", eph_key_gen_first_message_party_two);
+                println!("party_two_sign_message.second_message:{:?}", party_two_sign_message.second_message);
+                println!("sig_r: {}", signature.r);
+                println!("sig_s: {}", signature.s);
                 Err(SignError)
             }
         } else {
+            println!("Sig does not verify");
+            println!("sig_r: {}", signature.r);
+            println!("sig_s: {}", signature.s);
             Err(SignError)
         }
     }
