@@ -173,6 +173,9 @@ impl MasterKey1 {
             r: signature_with_recid.r.clone(),
             s: signature_with_recid.s.clone(),
         };
+        println!("sig_r: {}", signature.r);
+        println!("sig_s: {}", signature.s);
+
 
         let verify = party_one::verify(&signature, &self.public.q, message).is_ok();
         if verify {
