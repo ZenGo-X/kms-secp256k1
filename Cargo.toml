@@ -11,4 +11,4 @@ edition = "2021"
 [dependencies]
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }
-two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git" }
+two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git", branch="ecdsa_nonce_attack" }
