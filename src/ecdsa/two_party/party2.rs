@@ -123,7 +123,7 @@ impl MasterKey2 {
                 &party_one_second_message.ecdh_second_message,
             );
 
-        let party_two_paillier = party_two::PaillierPublic {
+        let mut party_two_paillier = party_two::PaillierPublic {
             ek: paillier_encryption_key.clone(),
             encrypted_secret_share: paillier_encrypted_share.clone(),
         };
@@ -132,7 +132,7 @@ impl MasterKey2 {
             &party_two_paillier,
             &party_one_second_message.range_proof,
         );
-
+        party_two_paillier.encrypted_secret_share = party_one_second_message.c_key.clone();
         let (pdl_first_message, pdl_chal) = party_two_paillier.pdl_challenge(
             &party_one_second_message
                 .ecdh_second_message
