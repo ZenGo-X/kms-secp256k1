@@ -115,7 +115,7 @@ impl MasterKey2 {
         (),
     > {
         let paillier_encryption_key = party_one_second_message.ek.clone();
-        let paillier_encrypted_share = party_one_second_message.c_key.clone();
+        let paillier_encrypted_share = party_one_second_message.encrypted_share_minus_q_thirds.clone();
 
         let party_two_second_message =
             party_two::KeyGenSecondMsg::verify_commitments_and_dlog_proof(
