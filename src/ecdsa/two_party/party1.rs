@@ -32,6 +32,7 @@ pub struct KeyGenParty1Message2 {
     pub ecdh_second_message: party_one::KeyGenSecondMsg,
     pub ek: EncryptionKey,
     pub c_key: BigInt,
+    pub encrypted_share_minus_q_thirds: BigInt,
     pub correct_key_proof: NICorrectKeyProof,
     pub range_proof: RangeProofNi,
 }
@@ -131,6 +132,7 @@ impl MasterKey1 {
                 ecdh_second_message: key_gen_second_message,
                 ek: paillier_key_pair.ek.clone(),
                 c_key: paillier_key_pair.encrypted_share.clone(),
+                encrypted_share_minus_q_thirds:paillier_key_pair.encrypted_share_minus_q_thirds.clone(),
                 correct_key_proof,
                 range_proof,
             },
