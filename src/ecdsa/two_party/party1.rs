@@ -210,7 +210,7 @@ impl MasterKey1 {
         party_one_private: party_one::Party1Private,
         pdl_decommit: party_one::PDLdecommit,
         alpha: BigInt,
-    ) -> Result<(party_one::PDLSecondMessage), ()> {
+    ) -> Result<party_one::PDLSecondMessage, ()> {
         party_one::PaillierKeyPair::pdl_second_stage(
             pdl_party_two_first_message,
             pdl_party_two_second_message,
