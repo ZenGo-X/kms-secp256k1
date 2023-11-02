@@ -110,22 +110,35 @@ impl MasterKey1 {
         party_one::PaillierKeyPair,
         party_one::Party1Private,
     ) {
+        println!("Before party_one::KeyGenSecondMsg::verify_and_decommit");
         let key_gen_second_message =
             party_one::KeyGenSecondMsg::verify_and_decommit(comm_witness, proof).expect("");
+        println!("After party_one::KeyGenSecondMsg::verify_and_decommit");
 
+        println!("Before party_one::PaillierKeyPair::generate_keypair_and_encrypted_share");
         let paillier_key_pair =
             party_one::PaillierKeyPair::generate_keypair_and_encrypted_share(ec_key_pair_party1);
+        println!("After party_one::PaillierKeyPair::generate_keypair_and_encrypted_share");
 
         // party one set her private key:
+        println!("Before party_one::Party1Private::set_private_key");
         let party_one_private =
             party_one::Party1Private::set_private_key(ec_key_pair_party1, &paillier_key_pair);
+        println!("After party_one::Party1Private::set_private_key");
 
+        println!("Before party_one::PaillierKeyPair::generate_range_proof");
         let range_proof = party_one::PaillierKeyPair::generate_range_proof(
             &paillier_key_pair,
             &party_one_private,
         );
+        println!("After party_one::PaillierKeyPair::generate_range_proof");
+
+        println!("Before party_one::PaillierKeyPair::generate_ni_proof_correct_key");
         let correct_key_proof =
             party_one::PaillierKeyPair::generate_ni_proof_correct_key(&paillier_key_pair);
+        println!("After party_one::PaillierKeyPair::generate_ni_proof_correct_key");
+
+
         (
             KeyGenParty1Message2 {
                 ecdh_second_message: key_gen_second_message,
